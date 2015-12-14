@@ -1,0 +1,24 @@
+GET /properties
+{"propertysets" : [ 
+                {"set"   : "TEST"},
+  				{"set"   : "TEST-2"}
+   ]
+}
+
+GET /properties?name=XXX
+{"properties" : [ 
+                {"log-level"   : "DEBUG"},
+  				{"host"        : "localhost"}
+   ]
+}
+
+PUT /properties?name=XXX
+{"properties" : [ 
+                {"log-level"   : "DEBUG"},
+  				{"host"        : "localhost"}
+   ]
+}
+
+CREATE /properties?name=XXX
+
+DELETE /properties?name=XXX
