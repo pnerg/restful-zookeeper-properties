@@ -46,6 +46,11 @@
 	</scm>
 
 	<dependencies>
+	    <dependency>
+		<groupId>org.apache.zookeeper</groupId>
+		<artifactId>zookeeper</artifactId>
+		<version>3.4.7</version>
+	    </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
