@@ -4,21 +4,41 @@ GET /properties
   				{"set"   : "TEST-2"}
    ]
 }
+200 if sets exist
+204 if no sets exist
 
 GET /properties?name=XXX
-{"properties" : [ 
-                {"log-level"   : "DEBUG"},
-  				{"host"        : "localhost"}
-   ]
+{ 
+ "log-level"   : "DEBUG",
+ "host"        : "localhost"
 }
+200 if set exists
+404 if set does not exists
 
 PUT /properties?name=XXX
-{"properties" : [ 
-                {"log-level"   : "DEBUG"},
-  				{"host"        : "localhost"}
-   ]
+{ 
+ "log-level"   : "DEBUG",
+ "host"        : "localhost"
 }
+200 if set existed and properties were set
+404 if no such set
 
-CREATE /properties?name=XXX
+PUT /properties?name=XXX
+201 if created
+204 if existed
 
 DELETE /properties?name=XXX
+200 if deleted
+204 if not exits (404?)
+
+DELETE /properties
+{"propertysets" : [ 
+                {"set"   : "TEST"},
+  				{"set"   : "TEST-2"}
+   ]
+}
+200 if executed
+404 if no such set
+
+http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
+The PUT method requests that the enclosed entity be stored under the supplied Request-URI. If the Request-URI refers to an already existing resource, the enclosed entity SHOULD be considered as a modified version of the one residing on the origin server. If the Request-URI does not point to an existing resource, and that URI is capable of being defined as a new resource by the requesting user agent, the origin server can create the resource with that URI. If a new resource is created, the origin server MUST inform the user agent via the 201 (Created) response. If an existing resource is modified, either the 200 (OK) or 204 (No Content) response codes SHOULD be sent to indicate successful completion of the request. If the resource could not be created or modified with the Request-URI, an appropriate error response SHOULD be given that reflects the nature of the problem. The recipient of the entity MUST NOT ignore any Content-* (e.g. Content-Range) headers that it does not understand or implement and MUST return a 501 (Not Implemented) response in such cases.
