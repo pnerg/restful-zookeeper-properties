@@ -51,7 +51,13 @@
 			<groupId>org.dmonix.functional</groupId>
 			<artifactId>java-scala-utils</artifactId>
 			<version>1.9</version>
-			<scope>provided</scope>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.dmonix.pool</groupId>
+			<artifactId>simple-pool</artifactId>
+			<version>1.0</version>
+			<scope>compile</scope>
 		</dependency>	
 		<dependency>
 			<groupId>org.apache.zookeeper</groupId>
