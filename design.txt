@@ -7,7 +7,7 @@ GET /properties
 200 if sets exist
 204 if no sets exist
 
-GET /properties?name=XXX
+GET /properties?propertyset=XXX
 { 
  "log-level"   : "DEBUG",
  "host"        : "localhost"
@@ -15,7 +15,7 @@ GET /properties?name=XXX
 200 if set exists
 404 if set does not exists
 
-PUT /properties?name=XXX
+PUT /properties?propertyset=XXX
 { 
  "log-level"   : "DEBUG",
  "host"        : "localhost"
@@ -23,11 +23,11 @@ PUT /properties?name=XXX
 200 if set existed and properties were set
 404 if no such set
 
-PUT /properties?name=XXX
+PUT /properties?propertyset=XXX
 201 if created
 204 if existed
 
-DELETE /properties?name=XXX
+DELETE /properties?propertyset=XXX
 200 if deleted
 204 if not exits (404?)
 
