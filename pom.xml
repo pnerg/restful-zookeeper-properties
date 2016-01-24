@@ -8,7 +8,7 @@
 	<name>RESTful ZooKeeper Properties</name>
 	<version>0.5-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	<description>Java implementation of some of the core utilities from Scala</description>
+	<description>Provides a RESTful JSON interface to a property based zookeeper data model</description>
 	<url>https://github.com/pnerg/restful-zookeeper-properties</url>
 	<issueManagement>
 		<system>github</system>
