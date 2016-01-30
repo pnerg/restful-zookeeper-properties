@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.dmonix.zookeeper</groupId>
+	<artifactId>restful-zookeeper-properties-example-web</artifactId>
+	<name>RESTful ZooKeeper Properties - WebApp</name>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>war</packaging>
+	<description>Example web-app using the RESTful ZooKeeper properties</description>
+	<url>https://github.com/pnerg/restful-zookeeper-properties</url>
+	<issueManagement>
+		<system>github</system>
+		<url>https://github.com/pnerg/restful-zookeeper-properties/issues</url>
+	</issueManagement>
+
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>pnerg</id>
+			<name>Peter Nerg</name>
+			<url>http://github.com/pnerg</url>
+		</developer>
+	</developers>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.dmonix.zookeeper</groupId>
+			<artifactId>restful-zookeeper-properties</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+				 <warName>restful-zookeeper-properties</warName>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
