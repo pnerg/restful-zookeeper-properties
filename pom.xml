@@ -6,7 +6,7 @@
 	<groupId>org.dmonix.zookeeper</groupId>
 	<artifactId>restful-zookeeper-properties</artifactId>
 	<name>RESTful ZooKeeper Properties</name>
-	<version>0.5-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<description>Provides a RESTful JSON interface to a property based zookeeper data model</description>
 	<url>https://github.com/pnerg/restful-zookeeper-properties</url>
@@ -48,17 +48,23 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.dmonix.functional</groupId>
-			<artifactId>java-scala-utils</artifactId>
-			<version>1.9</version>
+			<groupId>org.dmonix.zookeeper</groupId>
+			<artifactId>zookeeper-properties</artifactId>
+			<version>1.0</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.dmonix.pool</groupId>
-			<artifactId>simple-pool</artifactId>
-			<version>1.0</version>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-server</artifactId>
+			<version>1.8</version>
 			<scope>compile</scope>
-		</dependency>	
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-json</artifactId>
+			<version>1.8</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.zookeeper</groupId>
 			<artifactId>zookeeper</artifactId>
@@ -71,7 +77,7 @@
 			<version>1.7.13</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>javax.json</groupId>
 			<artifactId>javax.json-api</artifactId>
 			<version>1.0</version>
@@ -82,7 +88,7 @@
 			<artifactId>javax.json</artifactId>
 			<version>1.0.4</version>
 			<scope>test</scope>
-		</dependency>
+		</dependency-->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -94,7 +100,7 @@
 			<artifactId>zookeeper-junit</artifactId>
 			<version>1.1</version>
 			<scope>test</scope>
-		</dependency>		
+		</dependency>
 	</dependencies>
 
 	<build>
