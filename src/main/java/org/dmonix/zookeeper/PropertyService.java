@@ -15,11 +15,13 @@
  */
 package org.dmonix.zookeeper;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static javascalautils.OptionCompanion.Option;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -33,29 +35,39 @@ import javax.ws.rs.core.Response;
  * @author Peter Nerg
  * @since 1.0
  */
+@Singleton
 @Path("/properties")
 public class PropertyService {
 
+	private Map<String, Map<String, String>> map = new HashMap<>();
+	private final PropertiesStorageFactory propertiesStorageFactory;
+	
+	PropertyService(PropertiesStorageFactory propertiesStorageFactory)  {
+		this.propertiesStorageFactory = propertiesStorageFactory;
+	}
+	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<String> listPropertySets() {
-		List<String> ls = new ArrayList<String>();
-		ls.add("System");
-		ls.add("Module-1");
-
-		return ls;
+	public Set<String> listPropertySets() {
+		return map.keySet();
 	}
 
 	@GET
 	@Path("{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, String> getPropertySet(@PathParam("id") String id) {
-		PropertySet propertySet = PropertySet.apply(id);
-		propertySet.set("host", "localhost");
-		propertySet.set("port", "6969");
-		Map<String, String> properties = new HashMap<>();
-		propertySet.properties().forEach(name -> properties.put(name, propertySet.property(name).orNull()));
-		return properties;
+	public Response getPropertySet(@PathParam("id") String id) {
+		
+		return Option(map.get(id)).map(map -> {
+			return Response.status(200).entity(map).build();
+		}).getOrElse(() -> Response.status(404).build());
+		
+//		PropertySet propertySet = PropertySet.apply(id);
+//		propertySet.set("host", "localhost");
+//		propertySet.set("port", "6969");
+//		Map<String, String> properties = new HashMap<>();
+//		propertySet.properties().forEach(name -> properties.put(name, propertySet.property(name).orNull()));
+//		Response.status(200).
+//		return properties;
 	}
 	
 	@PUT
@@ -63,7 +75,7 @@ public class PropertyService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response setPropertySet(@PathParam("id") String id, Map<String, String> properties) {
-		properties.keySet().forEach(name -> System.out.println(name+":"+properties.get(name)));
+		map.put(id, properties);
 		return Response.status(201).build();
 	}
 }

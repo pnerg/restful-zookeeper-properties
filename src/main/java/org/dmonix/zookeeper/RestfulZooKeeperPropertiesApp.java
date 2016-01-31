@@ -15,14 +15,35 @@
  */
 package org.dmonix.zookeeper;
 
-import org.glassfish.jersey.server.ResourceConfig;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.ws.rs.core.Application;
 
 /**
  * @author Peter Nerg
  * @since 1.0
  */
-public final class RestfulZooKeeperPropertiesApp extends ResourceConfig {
-	public RestfulZooKeeperPropertiesApp() {
-		packages("org.dmonix.zookeeper");
+public final class RestfulZooKeeperPropertiesApp extends Application {
+
+	private final PropertiesStorageFactory propertiesStorageFactory;
+	
+	public RestfulZooKeeperPropertiesApp() throws IOException {
+		Properties properties = new Properties();
+		properties.load(getClass().getResourceAsStream("/application.properties"));
+
+		propertiesStorageFactory = PropertiesStorageFactory.apply(properties.getProperty("connect.string"));
+	}
+
+	/* (non-Javadoc)
+	 * @see javax.ws.rs.core.Application#getSingletons()
+	 */
+	@Override
+	public Set<Object> getSingletons() {
+		Set<Object> set = new HashSet<>();
+		set.add(new PropertyService(propertiesStorageFactory));
+		return set;
 	}
 }
