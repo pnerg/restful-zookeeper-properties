@@ -51,6 +51,10 @@ public class StartServiceManually {
 		//creates the root path in ZooKeeper
 		try (CloseableZooKeeper zk = instance.connect().get()) {
 			zk.create("/etc", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties/example-set", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties/example-set/host", "localhost".getBytes(), OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties/example-set/port", "6969".getBytes(), OPEN_ACL_UNSAFE, PERSISTENT);
 		}
 		
 		//starts the HTTP server
@@ -59,4 +63,5 @@ public class StartServiceManually {
 		System.out.println("Started service");
 		System.out.println("http://localhost:"+HTTP_PORT+"/properties");
 	}
+	
 }
