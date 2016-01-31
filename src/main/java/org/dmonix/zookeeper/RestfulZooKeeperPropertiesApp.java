@@ -21,7 +21,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import javax.ws.rs.core.Application;
-
+import static javascalautils.OptionCompanion.Option;
 /**
  * @author Peter Nerg
  * @since 1.0
@@ -34,7 +34,8 @@ public final class RestfulZooKeeperPropertiesApp extends Application {
 		Properties properties = new Properties();
 		properties.load(getClass().getResourceAsStream("/application.properties"));
 
-		propertiesStorageFactory = PropertiesStorageFactory.apply(properties.getProperty("connect.string"));
+		propertiesStorageFactory = PropertiesStorageFactory.apply(properties.getProperty("connectString"));
+		Option(properties.getProperty("rootPath")).forEach(value -> propertiesStorageFactory.withRootPath(value));
 	}
 
 	/* (non-Javadoc)
