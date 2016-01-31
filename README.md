@@ -3,6 +3,11 @@
 # RESTful ZooKeeper Properties
 Provides a RESTful JSON interface to a property based zookeeper data model.    
 This project adds a HTTP based RESTful interface on top of the project [ZooKeeper Properties](https://github.com/pnerg/zookeeper-properties)
+
+![Overview](https://github.com/pnerg/restful-zookeeper-properties/blob/master/src/main/javadoc/doc-files/overview.png)
+
+The purpose is to allow for easy access to view/change properties using non-programmatic tools such as [wget](https://www.gnu.org/software/wget/) and [curl](http://man.cx/curl)
+
 ## LICENSE
 
 Copyright 2016 Peter Nerg.
