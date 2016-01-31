@@ -41,15 +41,34 @@ Performing a _GET_ on the URL:
 Will yield a json formated list with all the name/value pairs of the properties for the set with the name _set-name_.  
 E.g.  
 ```json
+{"port": "6969","host": "127.0.0.1"}
+```
+or with pretty-print  
+```json
 {
 "port": "6969",
 "host": "127.0.0.1"
 }
 ```
 ### Set properties for a single property set
-t.b.d
-### Delete a single property set
-t.b.d
+Performing a _PUT_ on the URL:
+```
+[uri]/properties/set-name
+```  
+With the data such as :
+```json
+{"port": "6969","host": "127.0.0.1"}
+```
+Will set the properties for the set with the name _set-name_.  
+Note any existing set with the same name will be overwritten.  
+It's also important that the _Content-Type_ is set to _application/json_
+### Delete a property set
+Performing a _DELETE_ on the URL:
+```
+[uri]/properties/set-name
+```  
+Will delete the set with the name _set-name_.  
+
 ## LICENSE
 
 Copyright 2016 Peter Nerg.
