@@ -43,13 +43,7 @@ E.g.
 ```json
 {"port": "6969","host": "127.0.0.1"}
 ```
-or with pretty-print  
-```json
-{
-"port": "6969",
-"host": "127.0.0.1"
-}
-```
+If no such property set exists _NOT_FOUND 404_ is returned.
 ### Set properties for a single property set
 Performing a _PUT_ on the URL:
 ```
@@ -61,7 +55,8 @@ With the data such as :
 ```
 Will set the properties for the set with the name _set-name_.  
 Note any existing set with the same name will be overwritten.  
-It's also important that the _Content-Type_ is set to _application/json_
+It's also important that the _Content-Type_ is set to _application/json_  
+A successful operation results in _CREATED 201_
 ### Delete a property set
 Performing a _DELETE_ on the URL:
 ```
@@ -69,6 +64,48 @@ Performing a _DELETE_ on the URL:
 ```  
 Will delete the set with the name _set-name_.  
 
+## Try it out
+There project includes two way to try out the software.  
+Both are described below.
+### Start from IDE
+Using the [StartServiceManually](https://github.com/pnerg/restful-zookeeper-properties/blob/master/src/test/java/org/dmonix/zookeeper/StartServiceManually.java) class found in the source tree.  
+It will both start a in-memory ZooKeeper instance as well as a HTTP server exposing the REST interface.  
+Use any IDE of your choice to start the class.
+
+### Deploy to a servlet engine
+The project also provides an [example web-app](https://github.com/pnerg/restful-zookeeper-properties/tree/master/example-web-app) that you can build to a _war_ file and deploy into a servlet engine of your choice.  
+The web-app has been tested and verified with [Tomcat](http://tomcat.apache.org/).  
+This expects there to be a ZooKeeper server running on the localhost on port 6181.
+
+## Using CURL
+[Curl](http://man.cx/curl) is a popular Linux utility for sending HTTP operations from a bash shell.  
+The examples below is using the [StartServiceManually](https://github.com/pnerg/restful-zookeeper-properties/blob/master/src/test/java/org/dmonix/zookeeper/StartServiceManually.java) class started in Eclipse.  
+
+### Printing all property set names
+```bash
+%>curl localhost:9998/properties
+```
+Will produce
+```json
+["example-set"]
+```
+### Setting propertys for a set
+```bash
+curl -H "Content-Type: application/json" -d '{"user.name":"Peter","host":"127.0.0.1"}' -X PUT localhost:9998/properties/my-properties
+```
+Note the _Content-Type_ it's important to provide.
+### Getting propertys for a set
+```bash
+curl localhost:9998/properties/example-set
+```
+Will produce
+```json
+{"port":"6969","host":"127.0.0.1"}
+```
+### Deleting a property set
+```bash
+curl -X DELETE localhost:9998/properties/example-set
+```
 ## LICENSE
 
 Copyright 2016 Peter Nerg.
