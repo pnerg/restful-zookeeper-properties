@@ -53,7 +53,8 @@ public final class PropertyService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listPropertySets() {
 		Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
-		return result.map(list -> successResponse(list)).getOrElse(() -> failureResponse());
+		//orNull will never happen as we installed a recover function 
+		return result.map(list -> successResponse(list)).recover(t -> failureResponse(t)).orNull();
 	}
 
 	@GET
@@ -70,7 +71,8 @@ public final class PropertyService {
 			 return successResponse(properties);
 		}).getOrElse(() -> customReponse(Status.NOT_FOUND)));
 
-		return response.getOrElse(() -> failureResponse());
+		//orNull will never happen as we installed a recover function 
+		return response.recover(t -> failureResponse(t)).orNull();
 	}
 
 	@PUT
@@ -82,7 +84,9 @@ public final class PropertyService {
 		properties.forEach((k,v) -> set.set(k, v));
 		
 		Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.store(set));
-		return result.map(r -> customReponse(Status.CREATED)).getOrElse(() -> failureResponse());
+
+		//orNull will never happen as we installed a recover function 
+		return result.map(r -> customReponse(Status.CREATED)).recover(t -> failureResponse(t)).orNull();
 	}
 
 	@DELETE
@@ -91,9 +95,15 @@ public final class PropertyService {
 	public Response deletePropertySet(@PathParam("id") String id) {
 		//attempt to get the property set from storage
 		Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.delete(id));
-		return result.map(r -> customReponse(Status.OK)).getOrElse(() -> failureResponse());
+		//orNull will never happen as we installed a recover function 
+		return result.map(r -> customReponse(Status.OK)).recover(t -> failureResponse(t)).orNull();
 	}
 	
+	private static Response failureResponse(Throwable t) {
+		//TODO proper logging
+		t.printStackTrace();
+		return Response.status(Status.INTERNAL_SERVER_ERROR).entity(t.getMessage()).build();
+	}
 	
 	private static Response customReponse(Status status) {
 		return Response.status(status).build();
@@ -103,7 +113,4 @@ public final class PropertyService {
 		return Response.status(Status.OK).entity(response).build();
 	}
 	
-	private static Response failureResponse() {
-		return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-	}
 }

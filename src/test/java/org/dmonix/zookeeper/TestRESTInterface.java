@@ -24,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -98,7 +99,9 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	
 	@Test
 	public void setPropertySet() {
-
+		WebTarget target = client.target(HTTP_URL).path("/properties/setPropertySet");
+		Response response = target.request().put(Entity.json("{\"port\":\"6969\",\"host\":\"127.0.0.1\"}"));
+		assertEquals(201, response.getStatus());
 	}
 
 }
