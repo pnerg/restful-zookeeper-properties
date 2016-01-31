@@ -95,6 +95,8 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 		WebTarget target = client.target(HTTP_URL).path("/properties/setPropertySet");
 		Response response = target.request().put(Entity.json("{\"port\":\"6969\",\"host\":\"127.0.0.1\"}"));
 		assertEquals(201, response.getStatus());
+		
+		assertPropertySetExists("setPropertySet");
 	}
 
 	@Test
@@ -102,6 +104,16 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 		WebTarget target = client.target(HTTP_URL).path("/properties/no-such-set");
 		Response response = target.request().delete();
 		assertEquals(200, response.getStatus());
+	}
+
+	@Test
+	public void deletePropertySet() {
+		setPropertySet();
+		WebTarget target = client.target(HTTP_URL).path("/properties/setPropertySet");
+		Response response = target.request().delete();
+		assertEquals(200, response.getStatus());
+		
+		assertPropertySetNotExists("setPropertySet");
 	}
 	
 	@Test
@@ -119,4 +131,15 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 		assertEquals(200, response.getStatus());
 	}
 
+	private void assertPropertySetExists(String name) {
+		WebTarget target = client.target(HTTP_URL).path("/properties/"+name);
+		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
+		assertEquals(200, response.getStatus());
+	}
+
+	private void assertPropertySetNotExists(String name) {
+		WebTarget target = client.target(HTTP_URL).path("/properties/"+name);
+		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
+		assertEquals(404, response.getStatus());
+	}
 }
