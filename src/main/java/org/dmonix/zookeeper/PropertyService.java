@@ -32,6 +32,7 @@ import javax.ws.rs.core.Response.Status;
 
 import javascalautils.Option;
 import javascalautils.Try;
+import javascalautils.Unit;
 
 /**
  * @author Peter Nerg
@@ -76,8 +77,11 @@ public final class PropertyService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response setPropertySet(@PathParam("id") String id, Map<String, String> properties) {
-		// map.put(id, properties);
-		return customReponse(Status.CREATED);
+		PropertySet set = PropertySet.apply(id);
+		properties.forEach((k,v) -> set.set(k, v));
+		
+		Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.store(set));
+		return result.map(r -> customReponse(Status.CREATED)).getOrElse(() -> failureResponse());
 	}
 
 	private static Response customReponse(Status status) {

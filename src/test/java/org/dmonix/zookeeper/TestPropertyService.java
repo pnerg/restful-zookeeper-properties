@@ -15,18 +15,24 @@
  */
 package org.dmonix.zookeeper;
 
+import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.core.Response;
 
 import org.junit.Test;
 
+import javascalautils.Option;
+import javascalautils.Try;
+import junitextensions.OptionAssert;
+import junitextensions.TryAssert;
+
 /**
  * Test the class {@link PropertyService}
  * 
  * @author Peter Nerg
  */
-public class TestPropertyService extends BaseAssert {
+public class TestPropertyService extends BaseAssert implements TryAssert, OptionAssert {
 
 	private final MockPropertiesStorageFactory factory = new MockPropertiesStorageFactory();
 	private final PropertyService propertyService = new PropertyService(factory);
@@ -43,6 +49,7 @@ public class TestPropertyService extends BaseAssert {
 	@Test
 	public void listPropertySets() {
 		factory.store(createPropertySet("listPropertySets"));
+		
 		Response response = propertyService.listPropertySets();
 		assertEquals(200, response.getStatus());
 		@SuppressWarnings("unchecked")
@@ -51,6 +58,18 @@ public class TestPropertyService extends BaseAssert {
 		assertTrue(names.contains("listPropertySets"));
 	}
 
+	@Test
+	public void setPropertySet() {
+		HashMap<String, String> map = new HashMap<>();
+		map.put("user.name", "Peter");
+		
+		propertyService.setPropertySet("setPropertySet", map);
+		
+		Try<Option<PropertySet>> t = factory.get("setPropertySet");
+		assertSuccess(t);
+		assertSome(t.orNull());
+	}
+	
 	private static PropertySet createPropertySet(String name) {
 		PropertySet set = PropertySet.apply(name);
 		set.set("host", "localhost");
