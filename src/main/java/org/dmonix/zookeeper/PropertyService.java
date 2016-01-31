@@ -21,6 +21,7 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -84,6 +85,16 @@ public final class PropertyService {
 		return result.map(r -> customReponse(Status.CREATED)).getOrElse(() -> failureResponse());
 	}
 
+	@DELETE
+	@Path("{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response deletePropertySet(@PathParam("id") String id) {
+		//attempt to get the property set from storage
+		Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.delete(id));
+		return result.map(r -> customReponse(Status.OK)).getOrElse(() -> failureResponse());
+	}
+	
+	
 	private static Response customReponse(Status status) {
 		return Response.status(status).build();
 	}

@@ -63,7 +63,8 @@ public class TestPropertyService extends BaseAssert implements TryAssert, Option
 		HashMap<String, String> map = new HashMap<>();
 		map.put("user.name", "Peter");
 		
-		propertyService.setPropertySet("setPropertySet", map);
+		Response response = propertyService.setPropertySet("setPropertySet", map);
+		assertEquals(201, response.getStatus());
 		
 		Try<Option<PropertySet>> t = factory.get("setPropertySet");
 		assertSuccess(t);
@@ -78,6 +79,22 @@ public class TestPropertyService extends BaseAssert implements TryAssert, Option
 		assertEquals(200, response.getStatus());
 	}
 
+	@Test
+	public void deletePropertySet_nonExisting() {
+		Response response = propertyService.deletePropertySet("deletePropertySet");
+		assertEquals(200, response.getStatus());
+		Try<Option<PropertySet>> t = factory.get("deletePropertySet");
+		assertSuccess(t);
+		assertNone(t.orNull());
+	}
+
+	@Test
+	public void deletePropertySet() {
+		factory.store(createPropertySet("deletePropertySet"));
+		Response response = propertyService.deletePropertySet("deletePropertySet");
+		assertEquals(200, response.getStatus());
+	}
+	
 	@Test
 	public void getPropertySet_nonExisting() {
 		Response response = propertyService.getPropertySet("no-such-set");
