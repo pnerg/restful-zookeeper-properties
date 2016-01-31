@@ -15,25 +15,47 @@
  */
 package org.dmonix.zookeeper;
 
+import java.util.List;
+
 import javax.ws.rs.core.Response;
 
 import org.junit.Test;
 
 /**
  * Test the class {@link PropertyService}
+ * 
  * @author Peter Nerg
  */
 public class TestPropertyService extends BaseAssert {
 
 	private final MockPropertiesStorageFactory factory = new MockPropertiesStorageFactory();
 	private final PropertyService propertyService = new PropertyService(factory);
-	
-	
+
 	@Test
 	public void listPropertySets_noSets() {
 		Response response = propertyService.listPropertySets();
 		assertEquals(200, response.getStatus());
+		@SuppressWarnings("unchecked")
+		List<String> names = (List<String>)response.getEntity();
+		assertTrue(names.isEmpty());
 	}
-	
-	
+
+	@Test
+	public void listPropertySets() {
+		factory.store(createPropertySet("listPropertySets"));
+		Response response = propertyService.listPropertySets();
+		assertEquals(200, response.getStatus());
+		@SuppressWarnings("unchecked")
+		List<String> names = (List<String>)response.getEntity();
+		assertEquals(1, names.size());
+		assertTrue(names.contains("listPropertySets"));
+	}
+
+	private static PropertySet createPropertySet(String name) {
+		PropertySet set = PropertySet.apply(name);
+		set.set("host", "localhost");
+		set.set("port", "6969");
+		return set;
+	}
+
 }
