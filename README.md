@@ -28,7 +28,7 @@ Performing a _GET_ on the URL:
 ```
 [uri]/properties
 ```  
-Will yield a json formated list with all the names of the existing property sets.
+Will yield a json formated list with all the names of the existing property sets.  
 E.g.  
 ```json
 ["system"]
@@ -91,12 +91,12 @@ Will produce
 ```
 ### Setting properties for a set
 ```bash
-curl -H "Content-Type: application/json" -d '{"user.name":"Peter","host":"127.0.0.1"}' -X PUT localhost:9998/properties/my-properties
+%>curl -H "Content-Type: application/json" -d '{"user.name":"Peter","host":"127.0.0.1"}' -X PUT localhost:9998/properties/my-properties
 ```
 Note the _Content-Type_ it's important to provide.
 ### Getting properties for a set
 ```bash
-curl localhost:9998/properties/example-set
+%>curl localhost:9998/properties/example-set
 ```
 Will produce
 ```json
@@ -104,7 +104,7 @@ Will produce
 ```
 ### Deleting a property set
 ```bash
-curl -X DELETE localhost:9998/properties/example-set
+%>curl -X DELETE localhost:9998/properties/example-set
 ```
 ## LICENSE
 
