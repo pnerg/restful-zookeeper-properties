@@ -89,12 +89,12 @@ Will produce
 ```json
 ["example-set"]
 ```
-### Setting propertys for a set
+### Setting properties for a set
 ```bash
 curl -H "Content-Type: application/json" -d '{"user.name":"Peter","host":"127.0.0.1"}' -X PUT localhost:9998/properties/my-properties
 ```
 Note the _Content-Type_ it's important to provide.
-### Getting propertys for a set
+### Getting properties for a set
 ```bash
 curl localhost:9998/properties/example-set
 ```
