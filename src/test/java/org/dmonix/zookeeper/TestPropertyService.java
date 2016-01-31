@@ -70,6 +70,20 @@ public class TestPropertyService extends BaseAssert implements TryAssert, Option
 		assertSome(t.orNull());
 	}
 	
+	@Test
+	public void getPropertySet() {
+		factory.store(createPropertySet("getPropertySet"));
+		
+		Response response = propertyService.getPropertySet("getPropertySet");
+		assertEquals(200, response.getStatus());
+	}
+
+	@Test
+	public void getPropertySet_nonExisting() {
+		Response response = propertyService.getPropertySet("no-such-set");
+		assertEquals(404, response.getStatus());
+	}
+	
 	private static PropertySet createPropertySet(String name) {
 		PropertySet set = PropertySet.apply(name);
 		set.set("host", "localhost");
