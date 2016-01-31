@@ -98,6 +98,13 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	}
 
 	@Test
+	public void deletePropertySet_nonExistingSet() {
+		WebTarget target = client.target(HTTP_URL).path("/properties/no-such-set");
+		Response response = target.request().delete();
+		assertEquals(200, response.getStatus());
+	}
+	
+	@Test
 	public void listProperties_nonExistingSet() {
 		WebTarget target = client.target(HTTP_URL).path("/properties/no-such-set");
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
