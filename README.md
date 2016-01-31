@@ -8,6 +8,48 @@ This project adds a HTTP based RESTful interface on top of the project [ZooKeepe
 
 The purpose is to allow for easy access to view/change properties using non-programmatic tools such as [wget](https://www.gnu.org/software/wget/) and [curl](http://man.cx/curl)
 
+The above figure depicts a setup where there are a number of _micro services_, in an essence stand-alone processes performing some task. A typical problem in a _micro services_ architecture is to configure each individual service. Not only are the services potentially distributed over a number of hosts, there's most likley going to be multiple instances of each service. 
+The common pattern is to use a centralized database for storage, of which [ZooKeeper](https://zookeeper.apache.org/) is very popular.  
+
+The project [ZooKeeper Properties](https://github.com/pnerg/zookeeper-properties) provides the API the application/service needs to read property/configuration data.  
+For details on data model and usage of the persistence layer refer to the above referred project. 
+
+This project focuses on adding a simple way to manage the properties/configuration.  
+That is without needing to perform programmatic tasks.  
+Quite often the administrator needing to setup/maintain the system is not a programmer, rather a script hacker.  
+This person only wants to be able to set/read/delete property data using scripting tools or possible a web browser.  
+Therefore this project provides a simple RESTful interface allowing for easy manipulation of the property data using tools such as [curl](http://man.cx/curl).
+
+## The API
+There's four basic uses cases which are described in the sections to come.  
+
+### List all property sets
+Performing a _GET_ on the URL:
+```
+[uri]/properties
+```  
+Will yield a json formated list with all the names of the existing property sets.
+E.g.  
+```json
+["system"]
+```
+### List all properties for a single property set
+Performing a _GET_ on the URL:
+```
+[uri]/properties/set-name
+```  
+Will yield a json formated list with all the name/value pairs of the properties for the set with the name _set-name_.  
+E.g.  
+```json
+{
+"port": "6969",
+"host": "127.0.0.1"
+}
+```
+### Set properties for a single property set
+t.b.d
+### Delete a single property set
+t.b.d
 ## LICENSE
 
 Copyright 2016 Peter Nerg.
