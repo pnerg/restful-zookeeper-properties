@@ -15,11 +15,9 @@
  */
 package org.dmonix.zookeeper;
 
-import static javascalautils.OptionCompanion.Option;
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
@@ -30,6 +28,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import javascalautils.Option;
+import javascalautils.Try;
 
 /**
  * @author Peter Nerg
@@ -37,45 +39,56 @@ import javax.ws.rs.core.Response;
  */
 @Singleton
 @Path("/properties")
-public class PropertyService {
+public final class PropertyService {
 
-	private Map<String, Map<String, String>> map = new HashMap<>();
 	private final PropertiesStorageFactory propertiesStorageFactory;
-	
-	PropertyService(PropertiesStorageFactory propertiesStorageFactory)  {
+
+	PropertyService(PropertiesStorageFactory propertiesStorageFactory) {
 		this.propertiesStorageFactory = propertiesStorageFactory;
 	}
-	
+
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Set<String> listPropertySets() {
-		return map.keySet();
+	public Response listPropertySets() {
+		Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
+		return result.map(list -> successResponse(list)).getOrElse(() -> failureResponse());
 	}
 
 	@GET
 	@Path("{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getPropertySet(@PathParam("id") String id) {
+		//attempt to get the property set from storage
+		Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(id));
 		
-		return Option(map.get(id)).map(map -> {
-			return Response.status(200).entity(map).build();
-		}).getOrElse(() -> Response.status(404).build());
-		
-//		PropertySet propertySet = PropertySet.apply(id);
-//		propertySet.set("host", "localhost");
-//		propertySet.set("port", "6969");
-//		Map<String, String> properties = new HashMap<>();
-//		propertySet.properties().forEach(name -> properties.put(name, propertySet.property(name).orNull()));
-//		Response.status(200).
-//		return properties;
+		//make a response
+		Try<Response> response = result.map(option -> option.map(set -> {
+			 Map<String, String> properties = new HashMap<>();
+			 set.properties().forEach(name -> properties.put(name, set.property(name).orNull()));
+			 return successResponse(properties);
+		}).getOrElse(() -> customReponse(Status.NOT_FOUND)));
+
+		return response.getOrElse(() -> failureResponse());
 	}
-	
+
 	@PUT
 	@Path("{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response setPropertySet(@PathParam("id") String id, Map<String, String> properties) {
-		map.put(id, properties);
-		return Response.status(201).build();
+		// map.put(id, properties);
+		return customReponse(Status.CREATED);
+	}
+
+	private static Response customReponse(Status status) {
+		return Response.status(status).build();
+	}
+	
+	private static Response successResponse(Object response) {
+		return Response.status(Status.OK).entity(response).build();
+	}
+	
+	private static Response failureResponse() {
+		return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 	}
 }
