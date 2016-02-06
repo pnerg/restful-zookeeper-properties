@@ -15,37 +15,54 @@
  */
 package org.dmonix.zookeeper;
 
+import static org.apache.zookeeper.CreateMode.PERSISTENT;
+import static org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE;
+
+import java.time.Duration;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+
+import zookeeperjunit.CloseableZooKeeper;
+import zookeeperjunit.ZKFactory;
+import zookeeperjunit.ZKInstance;
+
 /**
  * This class is used to manually start both a ZooKeeper server and a web server exposing the RESTful ZooKeepoer interface. <br>
  * Once started it will print the URL you can use to connect to.
+ * 
  * @author Peter Nerg
  */
 public class StartServiceManually {
 	private static final int HTTP_PORT = 9998;
-	
-//	private static ZKInstance instance = ZKFactory.apply().withPort(6969).create();
-//	private static URI baseUri = UriBuilder.fromUri("http://localhost/").port(HTTP_PORT).build();
-//	private static ResourceConfig config = ResourceConfig.forApplicationClass(RestfulZooKeeperPropertiesApp.class);
-//	private static HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, config);
-//
-//	public static void main(String[] args) throws Throwable {
-//		//starts a in-memory ZooKeeper server
-//		instance.start().result(Duration.ofSeconds(5));
-//		
-//		//creates the root path in ZooKeeper
-//		try (CloseableZooKeeper zk = instance.connect().get()) {
-//			zk.create("/etc", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
-//			zk.create("/etc/properties", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
-//			zk.create("/etc/properties/example-set", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
-//			zk.create("/etc/properties/example-set/host", "localhost".getBytes(), OPEN_ACL_UNSAFE, PERSISTENT);
-//			zk.create("/etc/properties/example-set/port", "6969".getBytes(), OPEN_ACL_UNSAFE, PERSISTENT);
-//		}
-//		
-//		//starts the HTTP server
-//		server.start();
-//		
-//		System.out.println("Started service");
-//		System.out.println("http://localhost:"+HTTP_PORT+"/properties");
-//	}
-	
+
+	private static ZKInstance instance = ZKFactory.apply().create();
+	private static Server server = new Server(9998);
+
+	public static void main(String[] args) throws Throwable {
+		// starts a in-memory ZooKeeper server
+		instance.start().result(Duration.ofSeconds(5));
+
+		// creates the root path in ZooKeeper
+		try (CloseableZooKeeper zk = instance.connect().get()) {
+			zk.create("/etc", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties/example-set", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties/example-set/host", "localhost".getBytes(), OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties/example-set/port", "6969".getBytes(), OPEN_ACL_UNSAFE, PERSISTENT);
+		}
+
+		ServletHolder servletHolder = new ServletHolder(PropertyServiceServlet.class);
+		servletHolder.setInitParameter("connectString", instance.connectString().get());
+		servletHolder.setInitParameter("rootPath", "/etc/properties");
+		ServletHandler handler = new ServletHandler();
+		server.setHandler(handler);
+		handler.addServletWithMapping(servletHolder, "/properties/*");
+		server.start();
+
+		System.out.println("Started service");
+		System.out.println("http://localhost:" + HTTP_PORT + "/properties");
+	}
+
 }

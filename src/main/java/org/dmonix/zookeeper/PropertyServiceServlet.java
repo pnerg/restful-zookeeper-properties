@@ -37,7 +37,7 @@ import javascalautils.Unit;
  * @author Peter Nerg
  */
 @WebServlet(name = "PropertyService", displayName = "RESTful ZooKeeper Properties", description = "RESTful interface for managing properties stored in ZooKeeper", urlPatterns = {
-		"/properties/*" }, loadOnStartup = 1, initParams = { @WebInitParam(name = "connectString", value = "localhost:6969"), @WebInitParam(name = "rootPath", value = "/etc/properties") })
+		"/properties/*" }, loadOnStartup = 1, initParams = { @WebInitParam(name = "connectString", value = "localhost:6181"), @WebInitParam(name = "rootPath", value = "/etc/properties") })
 public class PropertyServiceServlet extends HttpServlet {
 
 	private static final Unit Unit = new Unit();

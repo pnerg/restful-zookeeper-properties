@@ -30,6 +30,7 @@ import javax.ws.rs.core.Response;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -49,7 +50,6 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	private static final String HTTP_URL = "http://localhost:"+HTTP_PORT;
 	
 	private static ZKInstance instance = ZKFactory.apply().withPort(6969).create();
-//	private static ResourceConfig config = ResourceConfig.forApplicationClass(RestfulZooKeeperPropertiesApp.class);
     private static Server server = new Server(9998);
 
 	private final Client client = ClientBuilder.newClient();
@@ -77,11 +77,13 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
         // Passing in the class for the Servlet allows jetty to instantiate an
         // instance of that Servlet and mount it on a given context path.
  
+		ServletHolder servletHolder = new ServletHolder(PropertyServiceServlet.class);
+		servletHolder.setInitParameter("connectString", instance.connectString().get());
+        
         // IMPORTANT:
         // This is a raw Servlet, not a Servlet that has been configured
         // through a web.xml @WebServlet annotation, or anything similar.
-        handler.addServletWithMapping(PropertyServiceServlet.class, "/*");
- 
+        handler.addServletWithMapping(servletHolder, "/*");
         // Start things up!
 		server.start();
 	}
