@@ -68,34 +68,13 @@ public class PropertyServiceServlet extends HttpServlet {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	/* (non-Javadoc)
+	 * @see javax.servlet.http.HttpServlet#doPut(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		writeResponse(resp, StringResponse(201, ""));
 	}
-
-	// /*
-	// * (non-Javadoc)
-	// *
-	// * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-	// */
-	// @Override
-	// protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-	// String path = getPathInfo(req);
-	//
-	// // list all property set names
-	// if (path.isEmpty()) {
-	// Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
-	// result.map(names -> writeJSonResponse(resp, gson.toJson(names))).recover(t -> writeInternalErrorResponse(resp, t));
-	// } else {
-	// Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(path));
-	// // make a response
-	// result.map(properties -> writeProperties(resp, properties)).recover(t -> writeInternalErrorResponse(resp, t));
-	// }
-	// }
 
 	/*
 	 * (non-Javadoc)
@@ -104,15 +83,14 @@ public class PropertyServiceServlet extends HttpServlet {
 	 */
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		String path = getPathInfo(req);
-		
+		String path = getPathInfo(req).getOrElse(() -> "");
+
 		// list all property set names
 		Try<Response> response = null;
 		if (path.isEmpty()) {
 			Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
 			response = result.map(list -> ListResponse(list)).recover(t -> ErrorResponse(t));
-		}
-		else {
+		} else {
 			Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(path));
 			response = result.map(p -> PropertySetResponse(p)).recover(t -> ErrorResponse(t));
 		}
@@ -120,22 +98,22 @@ public class PropertyServiceServlet extends HttpServlet {
 	}
 
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		String path = getPathInfo(req);
-//		if (path.isEmpty()) {
-//			writeErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, "Missing property set name");
-//			return;
-//		}
+		Response response = getPathInfo(req).map(path -> {
+			Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.delete(path));
+			return result.map(r -> OKResponse()).recover(t -> ErrorResponse(t)).orNull();
+		}).getOrElse(() -> ErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Missing property set name"));
+		writeResponse(resp, response);
 	}
 
-	private static String getPathInfo(HttpServletRequest req) {
-		return Option(req.getPathInfo()).map(p -> p.substring(1)).getOrElse(() -> "");
+	private static Option<String> getPathInfo(HttpServletRequest req) {
+		return Option(req.getPathInfo()).map(p -> p.substring(1));
 	}
 
 	private static void writeResponse(HttpServletResponse resp, Response response) {
 		resp.setStatus(response.responseCode);
 		Try(() -> resp.getWriter().write(response.message));
 	}
-	
+
 	private static class Response {
 		private final int responseCode;
 		private final String message;
@@ -147,6 +125,10 @@ public class PropertyServiceServlet extends HttpServlet {
 
 	}
 
+	static Response OKResponse() {
+		return new Response(200, "");
+	}
+	
 	static Response StringResponse(int responseCode, String message) {
 		return new Response(responseCode, message);
 	}
@@ -168,7 +150,7 @@ public class PropertyServiceServlet extends HttpServlet {
 	private static Response PropertySetResponse(Option<PropertySet> propertySet) {
 		return propertySet.map(p -> PropertySetResponse(p)).getOrElse(() -> ErrorResponse(HttpServletResponse.SC_NOT_FOUND, "No such property set"));
 	}
-	
+
 	private static Response ErrorResponse(Throwable t) {
 		return new Response(HttpServletResponse.SC_BAD_REQUEST, t.getMessage());
 	}
@@ -176,5 +158,5 @@ public class PropertyServiceServlet extends HttpServlet {
 	private static Response ErrorResponse(int responseCode, String message) {
 		return new Response(responseCode, message);
 	}
-	
+
 }
