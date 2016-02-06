@@ -15,6 +15,9 @@
  */
 package org.dmonix.zookeeper;
 
+import static javax.servlet.http.HttpServletResponse.SC_CREATED;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static org.apache.zookeeper.CreateMode.PERSISTENT;
 import static org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE;
 
@@ -104,7 +107,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	public void setPropertySet() {
 		WebTarget target = client.target(HTTP_URL).path("/properties/setPropertySet");
 		Response response = target.request().put(Entity.json("{\"port\":\"6969\",\"host\":\"127.0.0.1\"}"));
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+		assertEquals(SC_CREATED, response.getStatus());
 		
 		assertPropertySetExists("setPropertySet");
 	}
@@ -113,7 +116,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	public void deletePropertySet_nonExistingSet() {
 		WebTarget target = client.target(HTTP_URL).path("/properties/no-such-set");
 		Response response = target.request().delete();
-		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+		assertEquals(SC_OK, response.getStatus());
 	}
 
 	@Test
@@ -130,7 +133,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	public void listProperties_nonExistingSet() {
 		WebTarget target = client.target(HTTP_URL).path("/properties/no-such-set");
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
-		assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
+		assertEquals(SC_NOT_FOUND, response.getStatus());
 	}
 	
 	@Test
@@ -138,18 +141,18 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 		setPropertySet();
 		WebTarget target = client.target(HTTP_URL).path("/properties/setPropertySet");
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
-		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+		assertEquals(SC_OK, response.getStatus());
 	}
 
 	private void assertPropertySetExists(String name) {
 		WebTarget target = client.target(HTTP_URL).path("/properties/"+name);
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
-		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+		assertEquals(SC_OK, response.getStatus());
 	}
 
 	private void assertPropertySetNotExists(String name) {
 		WebTarget target = client.target(HTTP_URL).path("/properties/"+name);
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
-		assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
+		assertEquals(SC_NOT_FOUND, response.getStatus());
 	}
 }

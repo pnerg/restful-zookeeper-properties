@@ -15,12 +15,17 @@
  */
 package org.dmonix.zookeeper;
 
-import static javascalautils.OptionCompanion.Option;
-import static javascalautils.TryCompanion.Try;
 import static javascalautils.OptionCompanion.None;
+import static javascalautils.OptionCompanion.Option;
 import static javascalautils.OptionCompanion.Some;
+import static javascalautils.TryCompanion.Try;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_CREATED;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +43,8 @@ import com.google.gson.Gson;
 import javascalautils.Option;
 import javascalautils.Try;
 import javascalautils.Unit;
+
+
 
 /**
  * @author Peter Nerg
@@ -72,8 +79,23 @@ public class PropertyServiceServlet extends HttpServlet {
 	 * @see javax.servlet.http.HttpServlet#doPut(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		writeResponse(resp, EmptyResponse(HttpServletResponse.SC_CREATED));
+		Response result = getPathInfo(req).map(name -> {
+			Try<PropertySet> propSet = Try(() -> {
+				PropertySet set = PropertySet.apply(name);
+				Map<String, String> map = (Map<String, String>)gson.fromJson(new InputStreamReader(req.getInputStream()), Map.class);
+				map.forEach((k,v) -> set.set(k, v));
+				return set;
+			});
+			
+			Try<Unit> createResult = propSet.flatMap(set -> propertiesStorageFactory.create().flatMap(storage -> storage.store(set)));
+			
+			//orNull will never happen as we installed a recover function 
+			return createResult.map(u -> EmptyResponse(SC_CREATED)).recover(t -> ErrorResponse(t)).orNull();
+		}).getOrElse(() -> ErrorResponse(SC_BAD_REQUEST, "Missing property set name"));
+		
+		writeResponse(resp, result);
 	}
 
 	/*
@@ -101,8 +123,8 @@ public class PropertyServiceServlet extends HttpServlet {
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Response response = getPathInfo(req).map(path -> {
 			Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.delete(path));
-			return result.map(r -> EmptyResponse(HttpServletResponse.SC_OK)).recover(t -> ErrorResponse(t)).orNull();
-		}).getOrElse(() -> ErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Missing property set name"));
+			return result.map(r -> EmptyResponse(SC_OK)).recover(t -> ErrorResponse(t)).orNull();
+		}).getOrElse(() -> ErrorResponse(SC_BAD_REQUEST, "Missing property set name"));
 		writeResponse(resp, response);
 	}
 
@@ -133,16 +155,13 @@ public class PropertyServiceServlet extends HttpServlet {
 		
 	}
 
-	static Response EmptyResponse(int responseCode) {
+
+	private static Response EmptyResponse(int responseCode) {
 		return new Response(responseCode, "");
 	}
 
-	static Response StringResponse(int responseCode, String message) {
-		return new Response(responseCode, message);
-	}
-
 	private static Response ListResponse(List<String> list) {
-		return new Response(200, gson.toJson(list), Some(APPLICATION_JSON));
+		return new Response(SC_OK, gson.toJson(list), Some(APPLICATION_JSON));
 	}
 
 	private static Response PropertySetResponse(PropertySet propertySet) {
@@ -152,15 +171,15 @@ public class PropertyServiceServlet extends HttpServlet {
 				map.put(name, value);
 			});
 		}
-		return new Response(200, gson.toJson(map), Some(APPLICATION_JSON));
+		return new Response(SC_OK, gson.toJson(map), Some(APPLICATION_JSON));
 	}
 
 	private static Response PropertySetResponse(Option<PropertySet> propertySet) {
-		return propertySet.map(p -> PropertySetResponse(p)).getOrElse(() -> ErrorResponse(HttpServletResponse.SC_NOT_FOUND, "No such property set"));
+		return propertySet.map(p -> PropertySetResponse(p)).getOrElse(() -> ErrorResponse(SC_NOT_FOUND, "No such property set"));
 	}
 
 	private static Response ErrorResponse(Throwable t) {
-		return new Response(HttpServletResponse.SC_BAD_REQUEST, t.getMessage());
+		return new Response(SC_BAD_REQUEST, t.getMessage());
 	}
 
 	private static Response ErrorResponse(int responseCode, String message) {
