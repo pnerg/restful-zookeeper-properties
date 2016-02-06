@@ -19,7 +19,9 @@ import static javascalautils.OptionCompanion.Option;
 import static javascalautils.TryCompanion.Try;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -28,6 +30,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.google.gson.Gson;
 
 import javascalautils.Option;
 import javascalautils.Try;
@@ -46,12 +50,11 @@ public class PropertyServiceServlet extends HttpServlet {
 	 * A {@code String} constant representing {@value #APPLICATION_JSON} media type.
 	 */
 	private final static String APPLICATION_JSON = "application/json";
-	/** Double quote " */
-	private final static String DQC = "\"";
 	private static final long serialVersionUID = -5954664255975640068L;
 
 	private PropertiesStorageFactory propertiesStorageFactory;
-
+	private static final Gson gson = new Gson();
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -86,7 +89,7 @@ public class PropertyServiceServlet extends HttpServlet {
 		// list all property set names
 		if (path.isEmpty()) {
 			Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
-			result.map(names -> writeJSonResponse(resp, toString(names))).recover(t -> writeInternalErrorResponse(resp, t));
+			result.map(names -> writeJSonResponse(resp, gson.toJson(names))).recover(t -> writeInternalErrorResponse(resp, t));
 		} else {
 			Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(path));
 			// make a response
@@ -98,38 +101,14 @@ public class PropertyServiceServlet extends HttpServlet {
 
 	}
 
-	private static String toString(List<String> list) {
-		// this is sooo ugly, so imperative and non-functional.
-		// a simple reduce would be nicer but how to get rid of the last ','
-		int size = list.size();
-		StringBuilder sb = new StringBuilder();
-		sb.append("[");
-		for (int i = 0; i < list.size(); i++) {
-			sb.append(DQC).append(list.get(i)).append(DQC);
-			if (i < size - 1)
-				sb.append(",");
-		}
-		sb.append("]");
-		return sb.toString();
-	}
-
 	private static String toString(PropertySet propertySet) {
-		// this is sooo ugly, so imperative and non-functional.
-		// a simple reduce would be nicer but how to get rid of the last ','
-		StringBuilder sb = new StringBuilder();
-		sb.append("{");
-		int counter = 0;
-		int size = propertySet.properties().size();
+		final Map<String, String> map = new HashMap<>();
 		for (String name : propertySet.properties()) {
 			propertySet.property(name).forEach(value -> {
-				sb.append(DQC).append(name).append(DQC).append(":").append(DQC).append(value).append(DQC);
+				map.put(name, value);
 			});
-			counter++;
-			if (counter < size)
-				sb.append(",");
 		}
-		sb.append("}");
-		return sb.toString();
+		return gson.toJson(map);
 	}
 
 	private static Unit writeProperties(HttpServletResponse resp, Option<PropertySet> properties) {
