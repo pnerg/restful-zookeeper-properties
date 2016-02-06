@@ -21,6 +21,7 @@ import static org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -103,7 +104,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	public void setPropertySet() {
 		WebTarget target = client.target(HTTP_URL).path("/properties/setPropertySet");
 		Response response = target.request().put(Entity.json("{\"port\":\"6969\",\"host\":\"127.0.0.1\"}"));
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 		
 		assertPropertySetExists("setPropertySet");
 	}
@@ -112,7 +113,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	public void deletePropertySet_nonExistingSet() {
 		WebTarget target = client.target(HTTP_URL).path("/properties/no-such-set");
 		Response response = target.request().delete();
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
 	}
 
 	@Test
@@ -120,7 +121,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 		setPropertySet();
 		WebTarget target = client.target(HTTP_URL).path("/properties/setPropertySet");
 		Response response = target.request().delete();
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
 		
 		assertPropertySetNotExists("setPropertySet");
 	}
@@ -129,7 +130,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	public void listProperties_nonExistingSet() {
 		WebTarget target = client.target(HTTP_URL).path("/properties/no-such-set");
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
-		assertEquals(404, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
 	}
 	
 	@Test
@@ -137,18 +138,18 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 		setPropertySet();
 		WebTarget target = client.target(HTTP_URL).path("/properties/setPropertySet");
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
 	}
 
 	private void assertPropertySetExists(String name) {
 		WebTarget target = client.target(HTTP_URL).path("/properties/"+name);
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
 	}
 
 	private void assertPropertySetNotExists(String name) {
 		WebTarget target = client.target(HTTP_URL).path("/properties/"+name);
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
-		assertEquals(404, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
 	}
 }

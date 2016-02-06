@@ -17,6 +17,8 @@ package org.dmonix.zookeeper;
 
 import static javascalautils.OptionCompanion.Option;
 import static javascalautils.TryCompanion.Try;
+import static javascalautils.OptionCompanion.None;
+import static javascalautils.OptionCompanion.Some;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -43,8 +45,6 @@ import javascalautils.Unit;
 @WebServlet(name = "PropertyService", displayName = "RESTful ZooKeeper Properties", description = "RESTful interface for managing properties stored in ZooKeeper", urlPatterns = {
 		"/properties/*" }, loadOnStartup = 1, initParams = { @WebInitParam(name = "connectString", value = "localhost:6181"), @WebInitParam(name = "rootPath", value = "/etc/properties") })
 public class PropertyServiceServlet extends HttpServlet {
-
-	private static final Unit Unit = new Unit();
 
 	/**
 	 * A {@code String} constant representing {@value #APPLICATION_JSON} media type.
@@ -73,7 +73,7 @@ public class PropertyServiceServlet extends HttpServlet {
 	 */
 	@Override
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		writeResponse(resp, StringResponse(201, ""));
+		writeResponse(resp, EmptyResponse(HttpServletResponse.SC_CREATED));
 	}
 
 	/*
@@ -97,10 +97,11 @@ public class PropertyServiceServlet extends HttpServlet {
 		response.forEach(r -> writeResponse(resp, r));
 	}
 
+	@Override
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Response response = getPathInfo(req).map(path -> {
 			Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.delete(path));
-			return result.map(r -> OKResponse()).recover(t -> ErrorResponse(t)).orNull();
+			return result.map(r -> EmptyResponse(HttpServletResponse.SC_OK)).recover(t -> ErrorResponse(t)).orNull();
 		}).getOrElse(() -> ErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Missing property set name"));
 		writeResponse(resp, response);
 	}
@@ -111,30 +112,37 @@ public class PropertyServiceServlet extends HttpServlet {
 
 	private static void writeResponse(HttpServletResponse resp, Response response) {
 		resp.setStatus(response.responseCode);
+		response.mediaType.forEach(mt -> resp.setContentType(mt));
 		Try(() -> resp.getWriter().write(response.message));
 	}
 
 	private static class Response {
 		private final int responseCode;
 		private final String message;
-
+		private final Option<String> mediaType;
+		
 		private Response(int responseCode, String message) {
-			this.responseCode = responseCode;
-			this.message = message;
+			this(responseCode, message, None());
 		}
 
+		private Response(int responseCode, String message, Option<String> mediaType) {
+			this.responseCode = responseCode;
+			this.message = message;
+			this.mediaType = mediaType;
+		}
+		
 	}
 
-	static Response OKResponse() {
-		return new Response(200, "");
+	static Response EmptyResponse(int responseCode) {
+		return new Response(responseCode, "");
 	}
-	
+
 	static Response StringResponse(int responseCode, String message) {
 		return new Response(responseCode, message);
 	}
 
 	private static Response ListResponse(List<String> list) {
-		return new Response(200, gson.toJson(list));
+		return new Response(200, gson.toJson(list), Some(APPLICATION_JSON));
 	}
 
 	private static Response PropertySetResponse(PropertySet propertySet) {
@@ -144,7 +152,7 @@ public class PropertyServiceServlet extends HttpServlet {
 				map.put(name, value);
 			});
 		}
-		return new Response(200, gson.toJson(map));
+		return new Response(200, gson.toJson(map), Some(APPLICATION_JSON));
 	}
 
 	private static Response PropertySetResponse(Option<PropertySet> propertySet) {
