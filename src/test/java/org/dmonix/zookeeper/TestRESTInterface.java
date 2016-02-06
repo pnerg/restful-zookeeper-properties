@@ -18,7 +18,6 @@ package org.dmonix.zookeeper;
 import static org.apache.zookeeper.CreateMode.PERSISTENT;
 import static org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE;
 
-import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
@@ -28,11 +27,9 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -52,24 +49,46 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	private static final String HTTP_URL = "http://localhost:"+HTTP_PORT;
 	
 	private static ZKInstance instance = ZKFactory.apply().withPort(6969).create();
-	private static URI baseUri = UriBuilder.fromUri("http://localhost/").port(HTTP_PORT).build();
-	private static ResourceConfig config = ResourceConfig.forApplicationClass(RestfulZooKeeperPropertiesApp.class);
-	private static HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, config);
+//	private static ResourceConfig config = ResourceConfig.forApplicationClass(RestfulZooKeeperPropertiesApp.class);
+    private static Server server = new Server(9998);
 
 	private final Client client = ClientBuilder.newClient();
 
 	@BeforeClass
 	public static void startServer() throws TimeoutException, Throwable {
+		
+		
 		instance.start().result(Duration.ofSeconds(5));
 		try (CloseableZooKeeper zk = instance.connect().get()) {
 			zk.create("/etc", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
 		}
+		
+	       // Create a basic jetty server object that will listen on port 8080.
+        // Note that if you set this to port 0 then a randomly available port
+        // will be assigned that you can either look in the logs for the port,
+        // or programmatically obtain it for use in test cases.
+ 
+        // The ServletHandler is a dead simple way to create a context handler
+        // that is backed by an instance of a Servlet.
+        // This handler then needs to be registered with the Server object.
+        ServletHandler handler = new ServletHandler();
+        server.setHandler(handler);
+ 
+        // Passing in the class for the Servlet allows jetty to instantiate an
+        // instance of that Servlet and mount it on a given context path.
+ 
+        // IMPORTANT:
+        // This is a raw Servlet, not a Servlet that has been configured
+        // through a web.xml @WebServlet annotation, or anything similar.
+        handler.addServletWithMapping(PropertyServiceServlet.class, "/*");
+ 
+        // Start things up!
 		server.start();
 	}
 
 	@AfterClass
-	public static void stopServer() throws TimeoutException, InterruptedException {
-		server.shutdownNow();
+	public static void stopServer() throws Exception {
+		server.stop();
 		instance.destroy().ready(Duration.ofSeconds(5));
 	}
 

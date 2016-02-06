@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>org.dmonix.zookeeper</groupId>
 			<artifactId>restful-zookeeper-properties</artifactId>
-			<version>0.5</version>
+			<version>0.6-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>

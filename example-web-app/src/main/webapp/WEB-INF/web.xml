@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
          version="3.1">
          
-	<servlet>
+	<!-- servlet>
 		<servlet-name>org.dmonix.zookeeper.RestfulZooKeeperPropertiesApp</servlet-name>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
@@ -11,5 +11,5 @@
 	<servlet-mapping>
 		<servlet-name>org.dmonix.zookeeper.RestfulZooKeeperPropertiesApp</servlet-name>
 		<url-pattern>/*</url-pattern>
-	</servlet-mapping>
+	</servlet-mapping-->
 </web-app>

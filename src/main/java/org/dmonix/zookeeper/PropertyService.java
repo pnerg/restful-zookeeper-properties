@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -39,7 +38,7 @@ import javascalautils.Unit;
  * @author Peter Nerg
  * @since 1.0
  */
-@Singleton
+//@Singleton
 @Path("/properties")
 public final class PropertyService {
 
