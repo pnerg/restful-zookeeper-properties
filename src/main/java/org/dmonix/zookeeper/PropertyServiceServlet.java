@@ -50,7 +50,7 @@ import javascalautils.Unit;
  * @author Peter Nerg
  */
 @WebServlet(name = "PropertyService", displayName = "RESTful ZooKeeper Properties", description = "RESTful interface for managing properties stored in ZooKeeper", urlPatterns = {
-		"/properties/*" }, loadOnStartup = 1, initParams = { @WebInitParam(name = "connectString", value = "localhost:6181"), @WebInitParam(name = "rootPath", value = "/etc/properties") })
+		"/properties/*" }, loadOnStartup = 1, initParams = { @WebInitParam(name = "connectString", value = "localhost:2181"), @WebInitParam(name = "rootPath", value = "/etc/properties") })
 public class PropertyServiceServlet extends HttpServlet {
 
 	/**
@@ -111,7 +111,7 @@ public class PropertyServiceServlet extends HttpServlet {
 		Try<Response> response = null;
 		if (path.isEmpty()) {
 			Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
-			response = result.map(list -> ListResponse(list)).recover(t -> ErrorResponse(t));
+			response = result.map(list -> ObjectResponse(list)).recover(t -> ErrorResponse(t));
 		} else {
 			Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(path));
 			response = result.map(p -> PropertySetResponse(p)).recover(t -> ErrorResponse(t));
@@ -152,7 +152,6 @@ public class PropertyServiceServlet extends HttpServlet {
 			this.message = message;
 			this.mediaType = mediaType;
 		}
-		
 	}
 
 
@@ -160,8 +159,8 @@ public class PropertyServiceServlet extends HttpServlet {
 		return new Response(responseCode, "");
 	}
 
-	private static Response ListResponse(List<String> list) {
-		return new Response(SC_OK, gson.toJson(list), Some(APPLICATION_JSON));
+	private static Response ObjectResponse(Object object) {
+		return new Response(SC_OK, gson.toJson(object), Some(APPLICATION_JSON));
 	}
 
 	private static Response PropertySetResponse(PropertySet propertySet) {
@@ -171,7 +170,7 @@ public class PropertyServiceServlet extends HttpServlet {
 				map.put(name, value);
 			});
 		}
-		return new Response(SC_OK, gson.toJson(map), Some(APPLICATION_JSON));
+		return ObjectResponse(map);
 	}
 
 	private static Response PropertySetResponse(Option<PropertySet> propertySet) {
