@@ -49,7 +49,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	private static final int HTTP_PORT = 9998;
 	private static final String HTTP_URL = "http://localhost:"+HTTP_PORT;
 	
-	private static ZKInstance instance = ZKFactory.apply().withPort(6969).create();
+	private static ZKInstance instance = ZKFactory.apply().create();
     private static Server server = new Server(9998);
 
 	private final Client client = ClientBuilder.newClient();
@@ -61,30 +61,18 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 		instance.start().result(Duration.ofSeconds(5));
 		try (CloseableZooKeeper zk = instance.connect().get()) {
 			zk.create("/etc", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
 		}
 		
-	       // Create a basic jetty server object that will listen on port 8080.
-        // Note that if you set this to port 0 then a randomly available port
-        // will be assigned that you can either look in the logs for the port,
-        // or programmatically obtain it for use in test cases.
- 
-        // The ServletHandler is a dead simple way to create a context handler
-        // that is backed by an instance of a Servlet.
-        // This handler then needs to be registered with the Server object.
-        ServletHandler handler = new ServletHandler();
-        server.setHandler(handler);
- 
-        // Passing in the class for the Servlet allows jetty to instantiate an
-        // instance of that Servlet and mount it on a given context path.
- 
+		//configure and register the servlet
 		ServletHolder servletHolder = new ServletHolder(PropertyServiceServlet.class);
 		servletHolder.setInitParameter("connectString", instance.connectString().get());
-        
-        // IMPORTANT:
-        // This is a raw Servlet, not a Servlet that has been configured
-        // through a web.xml @WebServlet annotation, or anything similar.
-        handler.addServletWithMapping(servletHolder, "/*");
-        // Start things up!
+		servletHolder.setInitParameter("rootPath", "/etc/properties");
+		ServletHandler handler = new ServletHandler();
+		handler.addServletWithMapping(servletHolder, "/properties/*");
+
+		//start the HTTP server referring to the servlet
+		server.setHandler(handler);
 		server.start();
 	}
 

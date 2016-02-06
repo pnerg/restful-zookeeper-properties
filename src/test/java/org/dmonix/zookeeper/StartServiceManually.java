@@ -53,12 +53,15 @@ public class StartServiceManually {
 			zk.create("/etc/properties/example-set/port", "6969".getBytes(), OPEN_ACL_UNSAFE, PERSISTENT);
 		}
 
+		//configure and register the servlet
 		ServletHolder servletHolder = new ServletHolder(PropertyServiceServlet.class);
 		servletHolder.setInitParameter("connectString", instance.connectString().get());
 		servletHolder.setInitParameter("rootPath", "/etc/properties");
 		ServletHandler handler = new ServletHandler();
-		server.setHandler(handler);
 		handler.addServletWithMapping(servletHolder, "/properties/*");
+
+		//start the HTTP server referring to the servlet
+		server.setHandler(handler);
 		server.start();
 
 		System.out.println("Started service");
