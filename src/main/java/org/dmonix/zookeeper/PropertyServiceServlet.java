@@ -54,7 +54,7 @@ public class PropertyServiceServlet extends HttpServlet {
 
 	private PropertiesStorageFactory propertiesStorageFactory;
 	private static final Gson gson = new Gson();
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -77,6 +77,26 @@ public class PropertyServiceServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 	}
 
+	// /*
+	// * (non-Javadoc)
+	// *
+	// * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	// */
+	// @Override
+	// protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	// String path = getPathInfo(req);
+	//
+	// // list all property set names
+	// if (path.isEmpty()) {
+	// Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
+	// result.map(names -> writeJSonResponse(resp, gson.toJson(names))).recover(t -> writeInternalErrorResponse(resp, t));
+	// } else {
+	// Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(path));
+	// // make a response
+	// result.map(properties -> writeProperties(resp, properties)).recover(t -> writeInternalErrorResponse(resp, t));
+	// }
+	// }
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -84,51 +104,77 @@ public class PropertyServiceServlet extends HttpServlet {
 	 */
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		String path = Option(req.getPathInfo()).map(p -> p.substring(1)).getOrElse(() -> "");
-
+		String path = getPathInfo(req);
+		
 		// list all property set names
+		Try<Response> response = null;
 		if (path.isEmpty()) {
 			Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
-			result.map(names -> writeJSonResponse(resp, gson.toJson(names))).recover(t -> writeInternalErrorResponse(resp, t));
-		} else {
-			Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(path));
-			// make a response
-			result.map(properties -> writeProperties(resp, properties)).recover(t -> writeInternalErrorResponse(resp, t));
+			response = result.map(list -> ListResponse(list)).recover(t -> ErrorResponse(t));
 		}
+		else {
+			Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(path));
+			response = result.map(p -> PropertySetResponse(p)).recover(t -> ErrorResponse(t));
+		}
+		response.forEach(r -> writeResponse(resp, r));
 	}
 
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		String path = getPathInfo(req);
+//		if (path.isEmpty()) {
+//			writeErrorResponse(resp, HttpServletResponse.SC_BAD_REQUEST, "Missing property set name");
+//			return;
+//		}
+	}
+
+	private static String getPathInfo(HttpServletRequest req) {
+		return Option(req.getPathInfo()).map(p -> p.substring(1)).getOrElse(() -> "");
+	}
+
+	private static void writeResponse(HttpServletResponse resp, Response response) {
+		resp.setStatus(response.responseCode);
+		Try(() -> resp.getWriter().write(response.message));
+	}
+	
+	private static class Response {
+		private final int responseCode;
+		private final String message;
+
+		private Response(int responseCode, String message) {
+			this.responseCode = responseCode;
+			this.message = message;
+		}
 
 	}
 
-	private static String toString(PropertySet propertySet) {
+	static Response StringResponse(int responseCode, String message) {
+		return new Response(responseCode, message);
+	}
+
+	private static Response ListResponse(List<String> list) {
+		return new Response(200, gson.toJson(list));
+	}
+
+	private static Response PropertySetResponse(PropertySet propertySet) {
 		final Map<String, String> map = new HashMap<>();
 		for (String name : propertySet.properties()) {
 			propertySet.property(name).forEach(value -> {
 				map.put(name, value);
 			});
 		}
-		return gson.toJson(map);
+		return new Response(200, gson.toJson(map));
 	}
 
-	private static Unit writeProperties(HttpServletResponse resp, Option<PropertySet> properties) {
-		return properties.map(set -> writeJSonResponse(resp, toString(set))).getOrElse(() -> writeNotFoundResponse(resp));
-	}
-
-	private static Unit writeJSonResponse(HttpServletResponse resp, String response) {
-		resp.setContentType(APPLICATION_JSON);
-		return Try(() -> resp.getWriter().write(response)).getOrElse(() -> Unit);
-	}
-
-	private static Unit writeNotFoundResponse(HttpServletResponse resp) {
-		return writeErrorResponse(resp, HttpServletResponse.SC_NOT_FOUND, "No such property set");
+	private static Response PropertySetResponse(Option<PropertySet> propertySet) {
+		return propertySet.map(p -> PropertySetResponse(p)).getOrElse(() -> ErrorResponse(HttpServletResponse.SC_NOT_FOUND, "No such property set"));
 	}
 	
-	private static Unit writeInternalErrorResponse(HttpServletResponse resp, Throwable t) {
-		return writeErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t.getMessage());
+	private static Response ErrorResponse(Throwable t) {
+		return new Response(HttpServletResponse.SC_BAD_REQUEST, t.getMessage());
 	}
 
-	private static Unit writeErrorResponse(HttpServletResponse resp, int errorCode, String message) {
-		return Try(() -> resp.sendError(errorCode, message)).getOrElse(() -> Unit);
+	private static Response ErrorResponse(int responseCode, String message) {
+		return new Response(responseCode, message);
 	}
+	
 }
