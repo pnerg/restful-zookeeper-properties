@@ -1,0 +1,17 @@
+<configuration>
+	<!-- ===================================================================== -->
+	<!-- Logback configuration for JUnit -->
+	<!-- http://logback.qos.ch/manual/configuration.html -->
+	<!-- ===================================================================== -->
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d [%15.15t] %-5p [%c] %m%n</pattern>
+		</encoder>
+	</appender>
+
+	<root level="INFO">
+		<appender-ref ref="STDOUT" />
+	</root>
+
+</configuration>
