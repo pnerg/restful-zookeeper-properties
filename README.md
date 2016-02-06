@@ -91,7 +91,7 @@ Will produce
 ```
 ### Setting properties for a set
 ```bash
-%>curl -H "Content-Type: application/json" -d '{"user.name":"Peter","host":"127.0.0.1"}' -X PUT localhost:9998/properties/my-properties
+%>curl -H "Content-Type: application/json" -d '{user.name:"Peter",host:"127.0.0.1"}' -X PUT localhost:9998/properties/my-properties
 ```
 Note the _Content-Type_ it's important to provide.
 ### Getting properties for a set
@@ -100,7 +100,7 @@ Note the _Content-Type_ it's important to provide.
 ```
 Will produce
 ```json
-{"port":"6969","host":"127.0.0.1"}
+{port:"6969",host:"127.0.0.1"}
 ```
 ### Deleting a property set
 ```bash
