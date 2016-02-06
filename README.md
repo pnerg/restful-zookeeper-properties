@@ -41,7 +41,7 @@ Performing a _GET_ on the URL:
 Will yield a json formated list with all the name/value pairs of the properties for the set with the name _set-name_.  
 E.g.  
 ```json
-{"port": "6969","host": "127.0.0.1"}
+{port: "6969",host: "127.0.0.1"}
 ```
 If no such property set exists _NOT_FOUND 404_ is returned.
 ### Set properties for a single property set
@@ -51,7 +51,7 @@ Performing a _PUT_ on the URL:
 ```  
 With the data such as :
 ```json
-{"port": "6969","host": "127.0.0.1"}
+{port: "6969",host: "127.0.0.1"}
 ```
 Will set the properties for the set with the name _set-name_.  
 Note any existing set with the same name will be overwritten.  
