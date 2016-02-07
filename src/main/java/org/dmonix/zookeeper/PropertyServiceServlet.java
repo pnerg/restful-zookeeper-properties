@@ -95,11 +95,11 @@ public final class PropertyServiceServlet extends HttpServlet {
 	@SuppressWarnings("unchecked")
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Response result = getPathInfo(req).map(name -> {
-			logger.debug("Storing properties for [{}]", name);
 			Try<PropertySet> propSet = Try(() -> {
 				PropertySet set = PropertySet.apply(name);
 				Map<String, String> map = (Map<String, String>) gson.fromJson(new InputStreamReader(req.getInputStream()), Map.class);
 				map.forEach((k, v) -> set.set(k, v));
+				logger.debug("Storing property [{}]", set);
 				return set;
 			});
 
@@ -124,13 +124,14 @@ public final class PropertyServiceServlet extends HttpServlet {
 		if (path.isEmpty()) {
 			logger.debug("Requesting all property set names");
 			Try<List<String>> result = createStorage().flatMap(storage -> storage.propertySets());
-			response = result.map(list -> ObjectResponse(list)).recover(t -> ErrorResponse(t));
+			response = result.map(list -> ObjectResponse(list));
 		} else {
 			logger.debug("Requesting data for property [{}]", path);
 			Try<Option<PropertySet>> result = createStorage().flatMap(storage -> storage.get(path));
-			response = result.map(p -> PropertySetResponse(p)).recover(t -> ErrorResponse(t));
+			response = result.map(p -> PropertySetResponse(p));
 		}
-		response.forEach(r -> writeResponse(resp, r));
+		// orNull will never happen as we installed a recover function
+		writeResponse(resp, response.recover(t -> ErrorResponse(t)).orNull());
 	}
 
 	/**
@@ -170,11 +171,13 @@ public final class PropertyServiceServlet extends HttpServlet {
 	 * 
 	 * @param resp
 	 * @param response
+	 * @throws IOException 
 	 */
-	private static void writeResponse(HttpServletResponse resp, Response response) {
+	private static void writeResponse(HttpServletResponse resp, Response response) throws IOException {
+		logger.debug("Response [{}] [{}]", response.responseCode, response.message);
 		resp.setStatus(response.responseCode);
 		response.mediaType.forEach(mt -> resp.setContentType(mt));
-		Try(() -> resp.getWriter().write(response.message));
+		resp.getWriter().write(response.message);
 	}
 
 	/**

@@ -107,7 +107,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	@Test
 	public void setPropertySet() {
 		WebTarget target = client.target(HTTP_URL).path("/properties/setPropertySet");
-		Response response = target.request().put(Entity.json("{\"port\":\"6969\",\"host\":\"127.0.0.1\"}"));
+		Response response = target.request().put(Entity.json("{port:\"6969\",\"host\":\"127.0.0.1\"}"));
 		assertEquals(SC_CREATED, response.getStatus());
 
 		assertPropertySetExists("setPropertySet");
