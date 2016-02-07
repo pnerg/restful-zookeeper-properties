@@ -20,14 +20,13 @@ import static javascalautils.OptionCompanion.Option;
 import static javascalautils.OptionCompanion.Some;
 import static javascalautils.TryCompanion.Try;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_CREATED;
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -218,24 +217,13 @@ public final class PropertyServiceServlet extends HttpServlet {
 	}
 
 	/**
-	 * Creates a response with data from the provided property set
-	 * 
+	 * Creates a response using an optional value property set. <br>
+	 * If no property set is included a 404 is returned.
 	 * @param propertySet
-	 *            The property set to send to the client
 	 * @return
 	 */
-	private static Response PropertySetResponse(PropertySet propertySet) {
-		final Map<String, String> map = new HashMap<>();
-		for (String name : propertySet.properties()) {
-			propertySet.property(name).forEach(value -> {
-				map.put(name, value);
-			});
-		}
-		return ObjectResponse(map);
-	}
-
 	private static Response PropertySetResponse(Option<PropertySet> propertySet) {
-		return propertySet.map(p -> PropertySetResponse(p)).getOrElse(() -> ErrorResponse(SC_NOT_FOUND, "No such property set"));
+		return propertySet.map(p -> ObjectResponse(p.asMap())).getOrElse(() -> ErrorResponse(SC_NOT_FOUND, "No such property set"));
 	}
 
 	/**
