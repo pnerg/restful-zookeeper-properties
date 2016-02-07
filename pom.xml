@@ -50,19 +50,21 @@
 		<dependency>
 			<groupId>org.dmonix.zookeeper</groupId>
 			<artifactId>zookeeper-properties</artifactId>
-			<version>1.1</version>
+			<version>1.2</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.5</version>
+			<scope>compile</scope>
 		</dependency>
-		<!--dependency> <groupId>org.glassfish.jersey.core</groupId> <artifactId>jersey-server</artifactId> 
-			<version>2.22.1</version> <scope>compile</scope> </dependency> <dependency> 
-			<groupId>org.glassfish.jersey.media</groupId> <artifactId>jersey-media-json-jackson</artifactId> 
-			<version>2.22.1</version> </dependency> <dependency> <groupId>org.glassfish.jersey.bundles</groupId> 
-			<artifactId>jaxrs-ri</artifactId> <version>2.22.1</version> </dependency -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.14</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.zookeeper</groupId>
 			<artifactId>zookeeper</artifactId>
@@ -79,6 +81,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
