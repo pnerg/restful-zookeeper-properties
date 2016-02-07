@@ -1,15 +1,23 @@
-<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-         version="3.1">
-         
-	<!-- servlet>
-		<servlet-name>org.dmonix.zookeeper.RestfulZooKeeperPropertiesApp</servlet-name>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+	version="3.1">
 
-	<servlet-mapping>
-		<servlet-name>org.dmonix.zookeeper.RestfulZooKeeperPropertiesApp</servlet-name>
-		<url-pattern>/*</url-pattern>
-	</servlet-mapping-->
+	<!-- NOTE
+	This web.xml is not needed when deploying servlets of 3.0+ specification.
+	However if you intend to override any of the init/config parameters you'll need to specify them as illustrated below.
+	 -->
+
+	<!--servlet>
+		<servlet-name>org.dmonix.zookeeper.PropertyServiceServlet</servlet-name>
+		<load-on-startup>1</load-on-startup>
+		<init-param>
+			<param-name>connectString</param-name>
+			<param-value>localhost:2181</param-value>
+		</init-param>
+		<init-param>
+			<param-name>rootPath</param-name>
+			<param-value>/etc/properties</param-value>
+		</init-param>
+	</servlet-->
+
 </web-app>
