@@ -38,6 +38,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
 
 import javascalautils.Option;
@@ -55,8 +58,10 @@ import javascalautils.Unit;
 		"/properties/*" }, loadOnStartup = 1, initParams = { @WebInitParam(name = "connectString", value = "localhost:2181"), @WebInitParam(name = "rootPath", value = "/etc/properties") })
 public final class PropertyServiceServlet extends HttpServlet {
 
+	private static final Logger logger = LoggerFactory.getLogger(PropertyServiceServlet.class);
+	
 	/** A {@code String} constant representing {@value #APPLICATION_JSON} media type. */
-	public static final String APPLICATION_JSON = "application/json";
+	private static final String APPLICATION_JSON = "application/json";
 
 	private static final long serialVersionUID = -5954664255975640068L;
 
@@ -74,9 +79,13 @@ public final class PropertyServiceServlet extends HttpServlet {
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
+		
+		logger.info("Starting PropertyServiceServlet");
+		logger.info("connectString="+config.getInitParameter("connectString"));
+		logger.info("rootPath="+config.getInitParameter("rootPath"));
 		propertiesStorageFactory = PropertiesStorageFactory.apply(config.getInitParameter("connectString"));
 		Option(config.getInitParameter("rootPath")).forEach(value -> propertiesStorageFactory.withRootPath(value));
-
+		
 	}
 
 	/**
@@ -86,6 +95,7 @@ public final class PropertyServiceServlet extends HttpServlet {
 	@SuppressWarnings("unchecked")
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Response result = getPathInfo(req).map(name -> {
+			logger.debug("Storing properties for [{}]", name);
 			Try<PropertySet> propSet = Try(() -> {
 				PropertySet set = PropertySet.apply(name);
 				Map<String, String> map = (Map<String, String>) gson.fromJson(new InputStreamReader(req.getInputStream()), Map.class);
@@ -112,9 +122,11 @@ public final class PropertyServiceServlet extends HttpServlet {
 		// list all property set names
 		Try<Response> response = null;
 		if (path.isEmpty()) {
+			logger.debug("Requesting all property set names");
 			Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
 			response = result.map(list -> ObjectResponse(list)).recover(t -> ErrorResponse(t));
 		} else {
+			logger.debug("Requesting data for property [{}]", path);
 			Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(path));
 			response = result.map(p -> PropertySetResponse(p)).recover(t -> ErrorResponse(t));
 		}
@@ -126,8 +138,9 @@ public final class PropertyServiceServlet extends HttpServlet {
 	 */
 	@Override
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		Response response = getPathInfo(req).map(path -> {
-			Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.delete(path));
+		Response response = getPathInfo(req).map(name -> {
+			logger.debug("Deleting property set [{}]", name);
+			Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.delete(name));
 			return result.map(r -> EmptyResponse(SC_OK)).recover(t -> ErrorResponse(t)).orNull();
 		}).getOrElse(() -> ErrorResponse(SC_BAD_REQUEST, "Missing property set name"));
 		writeResponse(resp, response);
@@ -233,6 +246,7 @@ public final class PropertyServiceServlet extends HttpServlet {
 	 * @return
 	 */
 	private static Response ErrorResponse(Throwable t) {
+		logger.error("Failed to execute operation due to", t);
 		return new Response(SC_INTERNAL_SERVER_ERROR, t.getMessage());
 	}
 
