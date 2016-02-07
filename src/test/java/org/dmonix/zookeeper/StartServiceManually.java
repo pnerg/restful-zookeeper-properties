@@ -64,8 +64,9 @@ public class StartServiceManually {
 		server.setHandler(handler);
 		server.start();
 
-		System.out.println("Started service");
-		System.out.println("http://localhost:" + HTTP_PORT + "/properties");
+		System.out.println("Started services");
+		System.out.println(instance.connectString().get()); //the ZooKeeper connect string
+		System.out.println("http://localhost:" + HTTP_PORT + "/properties"); //The URL to direct your browser to
 	}
 
 }

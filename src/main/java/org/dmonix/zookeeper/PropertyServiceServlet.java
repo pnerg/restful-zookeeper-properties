@@ -20,6 +20,7 @@ import static javascalautils.OptionCompanion.Option;
 import static javascalautils.OptionCompanion.Some;
 import static javascalautils.TryCompanion.Try;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_CREATED;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
@@ -44,23 +45,27 @@ import javascalautils.Option;
 import javascalautils.Try;
 import javascalautils.Unit;
 
-
-
 /**
+ * The servlet acting as the REST interface for the properties in ZooKeeper. <br>
+ * Uses functionality from the <a href="https://github.com/pnerg/zookeeper-properties">zookeeper-properties</a> project to manage the properties in ZooKeeper.
+ * 
  * @author Peter Nerg
+ * @since 0.6
  */
 @WebServlet(name = "PropertyService", displayName = "RESTful ZooKeeper Properties", description = "RESTful interface for managing properties stored in ZooKeeper", urlPatterns = {
 		"/properties/*" }, loadOnStartup = 1, initParams = { @WebInitParam(name = "connectString", value = "localhost:2181"), @WebInitParam(name = "rootPath", value = "/etc/properties") })
-public class PropertyServiceServlet extends HttpServlet {
+public final class PropertyServiceServlet extends HttpServlet {
 
-	/**
-	 * A {@code String} constant representing {@value #APPLICATION_JSON} media type.
-	 */
-	private final static String APPLICATION_JSON = "application/json";
+	/** A {@code String} constant representing {@value #APPLICATION_JSON} media type. */
+	public static final String APPLICATION_JSON = "application/json";
+
 	private static final long serialVersionUID = -5954664255975640068L;
 
-	private PropertiesStorageFactory propertiesStorageFactory;
+	/** The GSon parser. */
 	private static final Gson gson = new Gson();
+
+	/** Factory to create access to the ZooKeeper storage */
+	private PropertiesStorageFactory propertiesStorageFactory;
 
 	/*
 	 * (non-Javadoc)
@@ -75,8 +80,8 @@ public class PropertyServiceServlet extends HttpServlet {
 
 	}
 
-	/* (non-Javadoc)
-	 * @see javax.servlet.http.HttpServlet#doPut(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	/**
+	 * Manages storage of property sets.
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
@@ -84,24 +89,22 @@ public class PropertyServiceServlet extends HttpServlet {
 		Response result = getPathInfo(req).map(name -> {
 			Try<PropertySet> propSet = Try(() -> {
 				PropertySet set = PropertySet.apply(name);
-				Map<String, String> map = (Map<String, String>)gson.fromJson(new InputStreamReader(req.getInputStream()), Map.class);
-				map.forEach((k,v) -> set.set(k, v));
+				Map<String, String> map = (Map<String, String>) gson.fromJson(new InputStreamReader(req.getInputStream()), Map.class);
+				map.forEach((k, v) -> set.set(k, v));
 				return set;
 			});
-			
+
 			Try<Unit> createResult = propSet.flatMap(set -> propertiesStorageFactory.create().flatMap(storage -> storage.store(set)));
-			
-			//orNull will never happen as we installed a recover function 
+
+			// orNull will never happen as we installed a recover function
 			return createResult.map(u -> EmptyResponse(SC_CREATED)).recover(t -> ErrorResponse(t)).orNull();
 		}).getOrElse(() -> ErrorResponse(SC_BAD_REQUEST, "Missing property set name"));
-		
+
 		writeResponse(resp, result);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	/**
+	 * Manages both listing the names of all property sets and listing properties for an individual set.
 	 */
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -119,6 +122,9 @@ public class PropertyServiceServlet extends HttpServlet {
 		response.forEach(r -> writeResponse(resp, r));
 	}
 
+	/**
+	 * Manages delete of a specified property set.
+	 */
 	@Override
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Response response = getPathInfo(req).map(path -> {
@@ -128,25 +134,60 @@ public class PropertyServiceServlet extends HttpServlet {
 		writeResponse(resp, response);
 	}
 
+	/**
+	 * Get the path info as specified in the URI.
+	 * 
+	 * @param req
+	 * @return
+	 */
 	private static Option<String> getPathInfo(HttpServletRequest req) {
 		return Option(req.getPathInfo()).map(p -> p.substring(1));
 	}
 
+	/**
+	 * Write the response to the client.
+	 * 
+	 * @param resp
+	 * @param response
+	 */
 	private static void writeResponse(HttpServletResponse resp, Response response) {
 		resp.setStatus(response.responseCode);
 		response.mediaType.forEach(mt -> resp.setContentType(mt));
 		Try(() -> resp.getWriter().write(response.message));
 	}
 
+	/**
+	 * Response object containg the response to be sent to the client.
+	 * 
+	 * @author Peter Nerg
+	 */
 	private static class Response {
 		private final int responseCode;
 		private final String message;
 		private final Option<String> mediaType;
-		
+
+		/**
+		 * Creates an instance
+		 * 
+		 * @param responseCode
+		 *            The HTTP response code
+		 * @param message
+		 *            The body of the response
+		 */
 		private Response(int responseCode, String message) {
 			this(responseCode, message, None());
 		}
 
+		/**
+		 * Creates an instance
+		 * 
+		 * @param responseCode
+		 *            The HTTP response code
+		 * @param message
+		 *            The body of the response
+		 * @param mediaType
+		 *            An optional media type of the response data
+		 */
 		private Response(int responseCode, String message, Option<String> mediaType) {
 			this.responseCode = responseCode;
 			this.message = message;
@@ -154,15 +195,35 @@ public class PropertyServiceServlet extends HttpServlet {
 		}
 	}
 
-
+	/**
+	 * Creates an empty response with only a response code
+	 * 
+	 * @param responseCode
+	 *            The HTTP response code
+	 * @return
+	 */
 	private static Response EmptyResponse(int responseCode) {
 		return new Response(responseCode, "");
 	}
 
+	/**
+	 * Creates a response where the provided object will be converted to json.
+	 * 
+	 * @param object
+	 *            The response object/message
+	 * @return
+	 */
 	private static Response ObjectResponse(Object object) {
 		return new Response(SC_OK, gson.toJson(object), Some(APPLICATION_JSON));
 	}
 
+	/**
+	 * Creates a response with data from the provided property set
+	 * 
+	 * @param propertySet
+	 *            The property set to send to the client
+	 * @return
+	 */
 	private static Response PropertySetResponse(PropertySet propertySet) {
 		final Map<String, String> map = new HashMap<>();
 		for (String name : propertySet.properties()) {
@@ -177,10 +238,24 @@ public class PropertyServiceServlet extends HttpServlet {
 		return propertySet.map(p -> PropertySetResponse(p)).getOrElse(() -> ErrorResponse(SC_NOT_FOUND, "No such property set"));
 	}
 
+	/**
+	 * Creates an error response with a internal error code.
+	 * 
+	 * @param t The underlying issue
+	 * @return
+	 */
 	private static Response ErrorResponse(Throwable t) {
-		return new Response(SC_BAD_REQUEST, t.getMessage());
+		return new Response(SC_INTERNAL_SERVER_ERROR, t.getMessage());
 	}
 
+	/**
+	 * Creates an error with a provided error code
+	 * 
+	 * @param responseCode
+	 *            The HTTP response code
+	 * @param message
+	 * @return
+	 */
 	private static Response ErrorResponse(int responseCode, String message) {
 		return new Response(responseCode, message);
 	}
