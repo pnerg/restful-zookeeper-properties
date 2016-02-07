@@ -103,7 +103,7 @@ public final class PropertyServiceServlet extends HttpServlet {
 				return set;
 			});
 
-			Try<Unit> createResult = propSet.flatMap(set -> propertiesStorageFactory.create().flatMap(storage -> storage.store(set)));
+			Try<Unit> createResult = propSet.flatMap(set -> createStorage().flatMap(storage -> storage.store(set)));
 
 			// orNull will never happen as we installed a recover function
 			return createResult.map(u -> EmptyResponse(SC_CREATED)).recover(t -> ErrorResponse(t)).orNull();
@@ -123,11 +123,11 @@ public final class PropertyServiceServlet extends HttpServlet {
 		Try<Response> response = null;
 		if (path.isEmpty()) {
 			logger.debug("Requesting all property set names");
-			Try<List<String>> result = propertiesStorageFactory.create().flatMap(storage -> storage.propertySets());
+			Try<List<String>> result = createStorage().flatMap(storage -> storage.propertySets());
 			response = result.map(list -> ObjectResponse(list)).recover(t -> ErrorResponse(t));
 		} else {
 			logger.debug("Requesting data for property [{}]", path);
-			Try<Option<PropertySet>> result = propertiesStorageFactory.create().flatMap(storage -> storage.get(path));
+			Try<Option<PropertySet>> result = createStorage().flatMap(storage -> storage.get(path));
 			response = result.map(p -> PropertySetResponse(p)).recover(t -> ErrorResponse(t));
 		}
 		response.forEach(r -> writeResponse(resp, r));
@@ -140,12 +140,21 @@ public final class PropertyServiceServlet extends HttpServlet {
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Response response = getPathInfo(req).map(name -> {
 			logger.debug("Deleting property set [{}]", name);
-			Try<Unit> result = propertiesStorageFactory.create().flatMap(storage -> storage.delete(name));
+			Try<Unit> result = createStorage().flatMap(storage -> storage.delete(name));
 			return result.map(r -> EmptyResponse(SC_OK)).recover(t -> ErrorResponse(t)).orNull();
 		}).getOrElse(() -> ErrorResponse(SC_BAD_REQUEST, "Missing property set name"));
 		writeResponse(resp, response);
 	}
 
+	/**
+	 * Uses the {@link PropertiesStorageFactory} to create a {@link AutoCloseablePropertiesStorage}.
+	 * @return
+	 */
+	private Try<PropertiesStorage> createStorage() {
+		//use the factory to create a PropertiesStorage and then wrap it in a AutoCloseablePropertiesStorage
+		return propertiesStorageFactory.create().map(storage -> new AutoCloseablePropertiesStorage(storage));
+	}
+	
 	/**
 	 * Get the path info as specified in the URI.
 	 * 
