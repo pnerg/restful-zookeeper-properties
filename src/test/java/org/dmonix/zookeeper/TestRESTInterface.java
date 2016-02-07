@@ -35,7 +35,9 @@ import javax.ws.rs.core.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -62,12 +64,7 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 
 	@BeforeClass
 	public static void startServer() throws TimeoutException, Throwable {
-
 		instance.start().result(Duration.ofSeconds(5));
-		try (CloseableZooKeeper zk = instance.connect().get()) {
-			zk.create("/etc", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
-			zk.create("/etc/properties", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
-		}
 
 		// configure and register the servlet
 		ServletHolder servletHolder = new ServletHolder(PropertyServiceServlet.class);
@@ -83,8 +80,23 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 
 	@AfterClass
 	public static void stopServer() throws Exception {
-		server.stop();
 		instance.destroy().ready(Duration.ofSeconds(5));
+		server.stop();
+	}
+
+	@Before
+	public void createZkPaths() throws TimeoutException, Throwable {
+		try (CloseableZooKeeper zk = instance.connect().get()) {
+			zk.create("/etc", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
+			zk.create("/etc/properties", new byte[0], OPEN_ACL_UNSAFE, PERSISTENT);
+		}
+	}
+	
+	@After
+	public void cleanZooKeeper() throws TimeoutException, Throwable {
+		try (CloseableZooKeeper zk = instance.connect().get()) {
+			zk.deleteRecursively("/etc");
+		}
 	}
 
 	/*
@@ -98,10 +110,20 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 	}
 
 	@Test
-	public void listPropertySets() {
+	public void listPropertySets_empty() {
 		WebTarget target = client.target(HTTP_URL).path("/properties");
 		Response response = target.request(APPLICATION_JSON_TYPE).get();
 		assertEquals(200, response.getStatus());
+		assertEquals("[]", response.readEntity(String.class));
+	}
+
+	@Test
+	public void listPropertySets() {
+		setPropertySet();
+		WebTarget target = client.target(HTTP_URL).path("/properties");
+		Response response = target.request(APPLICATION_JSON_TYPE).get();
+		assertEquals(200, response.getStatus());
+		assertEquals("[\"setPropertySet\"]", response.readEntity(String.class));
 	}
 
 	@Test
