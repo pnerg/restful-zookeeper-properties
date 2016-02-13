@@ -75,7 +75,7 @@ Use any IDE of your choice to start the class.
 ### Deploy to a servlet engine
 The project also provides an [example web-app](https://github.com/pnerg/restful-zookeeper-properties/tree/master/example-web-app) that you can build to a _war_ file and deploy into a servlet engine of your choice.  
 The web-app has been tested and verified with [Tomcat](http://tomcat.apache.org/).  
-This expects there to be a ZooKeeper server running on the localhost on port 6181.
+This expects there to be a ZooKeeper server running on the localhost on port 2181.
 
 ## Using CURL
 [Curl](http://man.cx/curl) is a popular Linux utility for sending HTTP operations from a bash shell.  
