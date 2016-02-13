@@ -6,7 +6,6 @@
 	<groupId>org.dmonix.zookeeper</groupId>
 	<artifactId>restful-zookeeper-properties</artifactId>
 	<name>RESTful ZooKeeper Properties</name>
-	<version>0.6</version>
 	<packaging>jar</packaging>
 	<description>Provides a RESTful JSON interface to a property based zookeeper data model</description>
 	<url>https://github.com/pnerg/restful-zookeeper-properties</url>
@@ -252,4 +251,5 @@
 		<system>Travis-CI</system>
 		<url>https://travis-ci.org/pnerg/restful-zookeeper-properties</url>
 	</ciManagement>
+	<version>1.0-SNAPSHOT</version>
 </project>
