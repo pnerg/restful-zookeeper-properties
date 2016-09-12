@@ -1,0 +1,42 @@
+#%RAML 1.0
+title: restful-zookeeper-properties
+version: 1.0
+description: The REST API to access property sets stored in ZooKeeper
+/properties:
+  get:
+    description: List all property set names
+    responses:
+      200:
+        description: Will return a list with all known names
+        body:
+          application/json:
+            example: |
+                ["system","my-props","some-other-props"]
+  /{propertyName}:
+    get:
+      description: Get all properties for named property set
+      responses:
+        200:
+          description: A successful fetch of the properties
+          body:
+            application/json:
+              example: |
+                {port:"6969",host:"127.0.0.1"}
+        404:
+          description: No property set with the provided name exists
+    delete:
+      description: Delete an entire named property set
+      responses:
+        204:
+          description: The property set was successfully deleted
+    put:
+      description: Sets all properties for a named property set
+      body:
+        application/json:
+          example: |
+            {port:"6969",host:"127.0.0.1"}
+      responses:
+        201:
+          description: The property set was successfully created
+        400:
+          description: If no name is provided for the property set
