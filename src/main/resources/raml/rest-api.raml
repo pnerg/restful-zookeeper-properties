@@ -7,12 +7,12 @@ description: The REST API to access property sets stored in ZooKeeper
     description: List all property set names
     responses:
       200:
-        description: Will return a list with all known names
+        description: Will return a list with all known property set names
         body:
           application/json:
             example: |
                 ["system","my-props","some-other-props"]
-  /{propertyName}:
+  /{propertySetName}:
     get:
       description: Get all properties for named property set
       responses:
