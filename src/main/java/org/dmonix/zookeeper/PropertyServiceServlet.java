@@ -26,6 +26,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
@@ -95,21 +96,31 @@ public final class PropertyServiceServlet extends HttpServlet {
 	@SuppressWarnings("unchecked")
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Response result = getPathInfo(req).map(name -> {
-			Try<PropertySet> propSet = Try(() -> {
-				PropertySet set = PropertySet.apply(name);
-				Map<String, String> map = (Map<String, String>) gson.fromJson(new InputStreamReader(req.getInputStream()), Map.class);
-				map.forEach((k, v) -> set.set(k, v));
-				logger.debug("Storing property [{}]", set);
-				return set;
-			});
-
-			Try<Unit> createResult = propSet.flatMap(set -> createStorage().flatMap(storage -> storage.store(set)));
-
+			Try<PropertySet> propSet = propSet(name, req);
 			// orNull will never happen as we installed a recover function
-			return createResult.map(u -> EmptyResponse(SC_CREATED)).recover(t -> ErrorResponse(t)).orNull();
+			return storeProperties(propSet)
+					.map(u -> EmptyResponse(SC_CREATED)).recover(t -> ErrorResponse(t)).orNull();
 		}).getOrElse(() -> ErrorResponse(SC_BAD_REQUEST, "Missing property set name"));
 
 		writeResponse(resp, result);
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Response result = getPathInfo(req).map(name -> {
+			Try<PropertySet> toBeStored = propSet(name, req)
+					.flatMap(newProps -> getStoredProperties(name).map(storedProps -> {
+						PropertySet combinedProps = storedProps.getOrElse(() -> PropertySet.apply(name));
+						newProps.asMap().forEach((k,v) -> combinedProps.set(k,v));
+						return combinedProps;
+					}));
+			// orNull will never happen as we installed a recover function
+			return storeProperties(toBeStored)
+					.map(u -> EmptyResponse(SC_CREATED)).recover(this::ErrorResponse).orNull();
+		}).getOrElse(() -> ErrorResponse(SC_BAD_REQUEST, "Missing property set name"));
+
+		writeResponse(resp, result);
+
 	}
 
 	/**
@@ -120,18 +131,17 @@ public final class PropertyServiceServlet extends HttpServlet {
 		String path = getPathInfo(req).getOrElse(() -> "");
 
 		// list all property set names
-		Try<Response> response = null;
+		Try<Response> response;
 		if (path.isEmpty()) {
 			logger.debug("Requesting all property set names");
 			Try<List<String>> result = createStorage().flatMap(storage -> storage.propertySets());
 			response = result.map(list -> ObjectResponse(list));
 		} else {
 			logger.debug("Requesting data for property [{}]", path);
-			Try<Option<PropertySet>> result = createStorage().flatMap(storage -> storage.get(path));
-			response = result.map(p -> PropertySetResponse(p));
+			response = getStoredProperties(path).map(this::PropertySetResponse);
 		}
 		// orNull will never happen as we installed a recover function
-		writeResponse(resp, response.recover(t -> ErrorResponse(t)).orNull());
+		writeResponse(resp, response.recover(this::ErrorResponse).orNull());
 	}
 
 	/**
@@ -142,9 +152,22 @@ public final class PropertyServiceServlet extends HttpServlet {
 		Response response = getPathInfo(req).map(name -> {
 			logger.debug("Deleting property set [{}]", name);
 			Try<Unit> result = createStorage().flatMap(storage -> storage.delete(name));
-			return result.map(r -> EmptyResponse(SC_OK)).recover(t -> ErrorResponse(t)).orNull();
+			return result.map(r -> EmptyResponse(SC_OK)).recover(this::ErrorResponse).orNull();
 		}).getOrElse(() -> ErrorResponse(SC_BAD_REQUEST, "Missing property set name"));
 		writeResponse(resp, response);
+	}
+
+	private Try<Unit> storeProperties(Try<PropertySet> propSet) {
+		return propSet.flatMap(set -> createStorage().flatMap(storage -> storage.store(set)));
+	}
+
+	/**
+	 * Get stored properties
+	 * @param name
+	 * @return
+     */
+	private Try<Option<PropertySet>> getStoredProperties(String name) {
+		return createStorage().flatMap(storage -> storage.get(name));
 	}
 
 	/**
@@ -155,7 +178,23 @@ public final class PropertyServiceServlet extends HttpServlet {
 		//use the factory to create a PropertiesStorage and then wrap it in a AutoCloseablePropertiesStorage
 		return propertiesStorageFactory.create().map(storage -> new AutoCloseablePropertiesStorage(storage));
 	}
-	
+
+	/**
+	 * Parses the property set data from the json formated data in the HTTP request input stream
+	 * @param name The name of the property set
+	 * @param req The HTTP request data
+	 * @return The property set
+	 */
+	private static Try<PropertySet> propSet(String name, HttpServletRequest req) {
+		return Try(() -> {
+			PropertySet set = PropertySet.apply(name);
+			Map<String, String> map = (Map<String, String>) gson.fromJson(new InputStreamReader(req.getInputStream()), Map.class);
+			map.forEach((k, v) -> set.set(k, v));
+			logger.debug("Storing property [{}]", set);
+			return set;
+		});
+	}
+
 	/**
 	 * Get the path info as specified in the URI.
 	 * 
@@ -226,7 +265,7 @@ public final class PropertyServiceServlet extends HttpServlet {
 	 *            The HTTP response code
 	 * @return
 	 */
-	private static Response EmptyResponse(int responseCode) {
+	private Response EmptyResponse(int responseCode) {
 		return new Response(responseCode, "");
 	}
 
@@ -237,7 +276,7 @@ public final class PropertyServiceServlet extends HttpServlet {
 	 *            The response object/message
 	 * @return
 	 */
-	private static Response ObjectResponse(Object object) {
+	private Response ObjectResponse(Object object) {
 		return new Response(SC_OK, gson.toJson(object), Some(APPLICATION_JSON));
 	}
 
@@ -247,7 +286,7 @@ public final class PropertyServiceServlet extends HttpServlet {
 	 * @param propertySet
 	 * @return
 	 */
-	private static Response PropertySetResponse(Option<PropertySet> propertySet) {
+	private Response PropertySetResponse(Option<PropertySet> propertySet) {
 		return propertySet.map(p -> ObjectResponse(p.asMap())).getOrElse(() -> ErrorResponse(SC_NOT_FOUND, "No such property set"));
 	}
 
@@ -257,7 +296,7 @@ public final class PropertyServiceServlet extends HttpServlet {
 	 * @param t The underlying issue
 	 * @return
 	 */
-	private static Response ErrorResponse(Throwable t) {
+	private Response ErrorResponse(Throwable t) {
 		logger.error("Failed to execute operation due to", t);
 		return new Response(SC_INTERNAL_SERVER_ERROR, t.getMessage());
 	}
