@@ -80,8 +80,8 @@ public class TestRESTInterface extends BaseAssert implements ZooKeeperAssert {
 
 	@AfterClass
 	public static void stopServer() throws Exception {
-		instance.destroy().ready(Duration.ofSeconds(5));
 		server.stop();
+		instance.destroy().ready(Duration.ofSeconds(5));
 	}
 
 	@Before
