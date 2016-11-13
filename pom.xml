@@ -59,7 +59,7 @@
 		<dependency>
 			<groupId>org.dmonix.servlet</groupId>
 			<artifactId>simple-servlet-framework</artifactId>
-			<version>1.0</version>
+			<version>1.0.1</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
