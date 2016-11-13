@@ -14,6 +14,10 @@
 		<url>https://github.com/pnerg/restful-zookeeper-properties/issues</url>
 	</issueManagement>
 
+	<properties>
+		<jetty.version>9.3.14.v20161028</jetty.version>
+	</properties>
+
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
@@ -107,11 +111,21 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-servlet</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+		<!--dependency>
 			<groupId>org.eclipse.jetty.aggregate</groupId>
 			<artifactId>jetty-all</artifactId>
 			<version>9.2.12.M0</version>
 			<scope>test</scope>
-		</dependency>
+		</dependency-->
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-client</artifactId>
