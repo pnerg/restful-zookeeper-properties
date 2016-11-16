@@ -102,7 +102,7 @@ public final class PropertyServiceServlet extends JSONServlet {
 	 * Manages both listing the names of all property sets and listing properties for an individual set.
 	 */
 	@Override
-	protected Response get(Request req)  {
+	protected Try<Response> getWithTry(Request req)  {
 		String path = req.getPathInfo().getOrElse(() -> "");
 
 		// list all property set names
@@ -115,8 +115,7 @@ public final class PropertyServiceServlet extends JSONServlet {
 			logger.debug("Requesting data for property [{}]", path);
 			response = getStoredProperties(path).map(this::PropertySetResponse);
 		}
-		// orNull will never happen as we installed a recover function
-		return response.recover(this::ErrorResponse).orNull();
+		return response;
 	}
 
 	/**
