@@ -1,0 +1,88 @@
+swagger: '2.0'
+
+info:
+  version: "0.1.0"
+  title: RESTful ZooKeeper Properties
+  description: The REST API to access property sets stored in ZooKeeper
+
+
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+  
+paths:
+  /properties:
+    get:
+      summary: List all property set names
+      description: List all property set names, empty list in case no property sets are defined/stored
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
+          examples: {
+            "Example response":
+              ["system","my-props","some-other-props"]
+          }
+   
+  /properties/{propertySetName}:
+    get:
+      summary: Gets all properties for a named property set
+      description: Gets all properties for a named property set
+      parameters:
+      - in: path
+        name: propertySetName
+        description: The name of the property set
+        type: string
+        required: true
+      responses:
+        200:
+          description: OK
+        404:
+          description: No such property set
+          
+    delete:
+      summary: Deletes an entire property set
+      description: Attempts to delete a property set. None existing sets are silently ignored as they don't exist
+      parameters:
+      - in: path
+        name: propertySetName
+        description: The name of the property set
+        type: string
+        required: true
+      responses:
+        204: 
+          description: The property set was deleted
+    
+    put:
+      summary: Sets all properties for a named property set
+      description: Sets all properties for a named property set. Any existing property set is completely overwritten 
+      parameters:
+      - in: path
+        name: propertySetName
+        description: The name of the property set
+        type: string
+        required: true
+      - in: body
+        name: properties
+        description: A map (key/value) with all properties to set
+        required: true
+        schema: 
+          type: object
+          additionalProperties:
+            type: string
+          example: 
+            {
+              "port":"6969",
+              "host":"127.0.0.1"
+            }
+      responses:
+        201:
+          description: The property set was created
+  
