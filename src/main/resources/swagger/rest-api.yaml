@@ -43,7 +43,19 @@ paths:
         required: true
       responses:
         200:
-          description: OK
+          description: Map with all properties
+          schema: 
+            type: object
+            additionalProperties:
+              type: string
+          examples: 
+            {
+              "Example response":
+              {
+              "port":"6969",
+              "host":"127.0.0.1"
+              }
+            }
         404:
           description: No such property set
           
